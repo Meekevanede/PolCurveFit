@@ -396,7 +396,7 @@ class PolCurveFit:
 		
 		# plot 1: effect_importance
 		for w_ac in w_ac_:
-			plt.clf()
+			plt.close('all')
 			fig,ax = plt.subplots(figsize=(10, 5))
 			for importance in importance_:				
 				df_select = df.loc[df['w_ac'] == w_ac]
@@ -409,23 +409,24 @@ class PolCurveFit:
 				else:
 					plt.plot(x,y, label = 'W = '+ str(importance) +' %')
 
-			plt.ylabel(r'$\beta_{O_{2}}$ [V/dec]')
+			plt.ylabel(r'$\beta_{cath}$ [V/dec]')
 			plt.xlabel('cathodic window [V from OCP]')
 			plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-			plt.title('window activation control = ' + str(w_ac) + ' mV')
+			plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
 			plt.tight_layout()
-			fig.savefig(output_folder +'/effect_importance/wac=' +str(w_ac)+'.jpeg', format='jpeg', dpi=1000)
+			fig.savefig(output_folder +'/effect_importance/wac=' +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
 
 
 		# plot 2: effect_importance_fluctuation
 		for w_ac in w_ac_:
-			plt.clf()
+			plt.close('all')
 			fig,ax = plt.subplots(figsize=(10, 5))
 			for importance in importance_:				
 				df_select = df.loc[df['w_ac'] == w_ac]
 				df_select = df_select.loc[df_select['importance']== importance]
 				x = df_select['window_cat'].to_numpy()
 				y = df_select['b_c_best'].to_numpy()
+
 				y_fluc = self.get_fluc(y)
 				
 				if importance == 0:
@@ -433,16 +434,16 @@ class PolCurveFit:
 				else:
 					plt.plot(x,y_fluc, label = 'W = '+ str(importance) +' %')
 
-			plt.ylabel(r'relative change of $\beta_{O_{2}}$ [V/dec]')
+			plt.ylabel(r'relative change of $\beta_{cath}$ [V/dec]')
 			plt.xlabel('cathodic window [V from OCP]')
 			plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-			plt.title('window activation control = ' + str(w_ac) + ' mV')
+			plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
 			plt.tight_layout()
-			fig.savefig(output_folder +'/effect_importance_fluctuation/wac=' +str(w_ac)+'.jpeg', format='jpeg', dpi=1000)
+			fig.savefig(output_folder +'/effect_importance_fluctuation/wac=' +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
 
 		# plot 3: effect_importance_il
 		for w_ac in w_ac_:
-			plt.clf()
+			plt.close('all')
 			fig,ax = plt.subplots(figsize=(10, 5))
 			for importance in importance_:				
 				df_select = df.loc[df['w_ac'] == w_ac]
@@ -459,14 +460,14 @@ class PolCurveFit:
 			plt.ylabel(r'$i_{L}$ [A/m$^2$]')
 			plt.xlabel('cathodic window [V from OCP]')
 			plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-			plt.title('window activation control = ' + str(w_ac) + ' mV')
+			plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
 			plt.tight_layout()
-			fig.savefig(output_folder +'/effect_importance_il/wac=' +str(w_ac)+'.jpeg', format='jpeg', dpi=1000)
+			fig.savefig(output_folder +'/effect_importance_il/wac=' +'%.2f' % w_ac +'.jpeg', format='jpeg', dpi=1000)
 
 		# plot 4: effect_window_act_control
 		for importance in importance_:
 			if importance != 0:
-				plt.clf()
+				plt.close('all')
 				fig,ax = plt.subplots(figsize=(10, 6))
 				i = 0
 				for w_ac in w_ac_:
@@ -482,17 +483,17 @@ class PolCurveFit:
 				plt.plot(df_select_notweighted['window_cat'].to_numpy(),df_select_notweighted['b_c_best'].to_numpy(), '--k')
 				cmap=self.truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
 				norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
-				plt.ylabel(r'$\beta_{O_{2}}$ [V/dec]')
+				plt.ylabel(r'$\beta_{cath}$ [V/dec]')
 				plt.ylim([0,0.5])
 				plt.xlabel('cathodic window [V from OCP]')
-				plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label='wac [V]')
+				plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
 				plt.title('Weight (W) = ' + str(importance)+'%')
 				fig.savefig(output_folder+'/effect_window_act_control/W='+str(importance)+'.jpeg', format='jpeg', dpi=1000)
 
 		# plot 5: effect_window_act_control_fluctuation
 		for importance in importance_:
 			if importance != 0:
-				plt.clf()
+				plt.close('all')
 				fig,ax = plt.subplots(figsize=(10, 6))
 				i = 0
 				for w_ac in w_ac_:
@@ -511,9 +512,9 @@ class PolCurveFit:
 				plt.plot(df_select_notweighted['window_cat'].to_numpy(),y_fluc, '--k')
 				cmap=self.truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
 				norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
-				plt.ylabel(r'relative change of $\beta_{O_{2}}$ [V/dec]')
+				plt.ylabel(r'relative change of $\beta_{cath}$ [V/dec]')
 				plt.xlabel('cathodic window [V from OCP]')
-				plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label='wac [V]')
+				plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
 				plt.title('weight (W) = ' + str(importance)+'%')
 				fig.savefig(output_folder+'/effect_window_act_control_fluctuation/W='+str(importance)+'.jpeg', format='jpeg', dpi=1000)
 
@@ -541,6 +542,7 @@ class PolCurveFit:
 			print('Output folder exists - plots will be overwritten')
 
 		# plot 1: data
+		plt.close('all')
 		fig = plt.figure(1)
 		plt.plot(self.E_obs,self.I)
 		plt.ylabel('I [A]')
@@ -631,7 +633,7 @@ class PolCurveFit:
 	# function to obtain the change in respect to the mean of the last 10 points
 	def get_fluc(self,y):
 		y_fluc = np.zeros(len(y))
-		for j in range(0,len(y)-1):
+		for j in range(1,len(y)-1):
 			if j<9:
 				y_fluc[j+1] = (y[j+1]-np.mean(y[:j]))
 			else:
