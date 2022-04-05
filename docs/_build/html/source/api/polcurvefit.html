@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PolCurveFit &mdash; PolCurveFit  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Getting started" href="../examples/getting_started.html" />
+    <link rel="prev" title="Welcome to PolCurveFit’s documentation!" href="../../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> PolCurveFit
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Python Class PolCurveFit</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PolCurveFit</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/getting_started.html">Getting started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/example1.html">Example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/example2.html">Example 2</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PolCurveFit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>PolCurveFit</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/polcurvefit.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="polcurvefit">
+<h1>PolCurveFit<a class="headerlink" href="#polcurvefit" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="polcurvefit.PolCurveFit">
+<em class="property">class </em><code class="descclassname">polcurvefit.</code><code class="descname">PolCurveFit</code><span class="sig-paren">(</span><em>E</em>, <em>I</em>, <em>R=0.0</em>, <em>sample_surface=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit" title="Permalink to this definition">¶</a></dt>
+<dd><p>PolCurveFit is a python library that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
+Tafel slopes, corrosion current density and exchange current densities. The data can be fitted with 3 techniques: Tafel extrapolation (linear fit), 
+‘Activation control fit’ &amp; ‘mixed activation-diffusion control fit’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E</strong> (<em>N-length sequence</em>) – The electrical potentials [V vs ref]</p></li>
+<li><p><strong>I</strong> (<em>N-length sequence</em>) – The electrical current or current density [A or A/area]</p></li>
+<li><p><strong>R</strong> (<em>float</em>) – The resistance, to correct for the voltage drop (IR-drop/ohmic potential drop) [Ohm] (Default = 0.0)</p></li>
+<li><p><strong>sample_surface</strong> (<em>float</em>) – The surface area of the metal sample surface measured. This used to convert from current to current density. If I is already the current density, use the default. If the surface area is not given, the obtained corrosion rates and exchange current density are simply currents (default = 1.0).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="polcurvefit.PolCurveFit.active_pol_fit">
+<code class="descname">active_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.01</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.active_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.active_pol_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitting of a theoretical description, representative for the anodic and cathodic activation controlled currents around the Corrosion potential (OCP).
+This option is suitable for data of which the anodic and cathodic branches are solely under activation control.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window</strong> (<em>2-length sequence</em>) – Lower and upper bounds of the data to be fitted, relative to the corrosion potential [min value, max value], units [V vs E_corr]</p></li>
+<li><p><strong>i_corr_guess</strong> (<em>float</em>) – First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</p></li>
+<li><p><strong>obtain_io</strong> – If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</p></li>
+<li><p><strong>E_rev_an</strong> (<em>float</em>) – The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
+<li><p><strong>E_rev_cath</strong> (<em>float</em>) – The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Return fit_results</dt>
+<dd class="field-odd"><p>the fit to the data [current densities (N-array), potentials (N-array)]</p>
+</dd>
+<dt class="field-even">Rtype fit_results</dt>
+<dd class="field-even"><p>2xN array</p>
+</dd>
+<dt class="field-odd">Return E_corr</dt>
+<dd class="field-odd"><p>the corrosion potential [V vs ref]</p>
+</dd>
+<dt class="field-even">Rtype E_corr</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return I_corr</dt>
+<dd class="field-odd"><p>the corrosion rate (if the corrosion potential is given as input) [A/surface area]</p>
+</dd>
+<dt class="field-even">Rtype I_corr</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return b_an</dt>
+<dd class="field-odd"><p>the obtained anodic Tafel slope [V]</p>
+</dd>
+<dt class="field-even">Rtype b_an</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return b_cath</dt>
+<dd class="field-odd"><p>the obtained cathodic Tafel slope [V]</p>
+</dd>
+<dt class="field-even">Rtype b_cath</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return RMSE</dt>
+<dd class="field-odd"><p>the root mean squared error of the fit</p>
+</dd>
+<dt class="field-even">Rtype RMSE</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return io_an</dt>
+<dd class="field-odd"><p>Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</p>
+</dd>
+<dt class="field-even">Rtype io_an</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return io_cath</dt>
+<dd class="field-odd"><p>Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</p>
+</dd>
+<dt class="field-even">Rtype io_cath</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="polcurvefit.PolCurveFit.linear_fit">
+<code class="descname">linear_fit</code><span class="sig-paren">(</span><em>window</em>, <em>E_corr=0.0</em>, <em>obtain_io=False</em>, <em>E_rev=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.linear_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.linear_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitting of a linear line to the data. This option is suitable for data which is solely under activation control on the anodic 
+or on the cathodic branch. It fits a linear line the data in the selected window. If the corrosion potential E_corr is given,
+the returned I_corr relects the corrosion rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window</strong> (<em>2-length sequence</em>) – Lower and upper bounds of the data to be fitted [min value, max value], units [V vs ref]</p></li>
+<li><p><strong>E_corr</strong> (<em>float</em>) – The corrosion potential (OCP) [V vs ref]. If specified, the returned I_corr_best reflects the corrosion rate. (Default: 0.0)</p></li>
+<li><p><strong>obtain_io</strong> (<em>bool</em>) – If True, the (cathodic OR anodic) exchange current density will be determined from the obtained Tafel slope and E_rev. (Default: False)</p></li>
+<li><p><strong>E_rev</strong> (<em>float</em>) – The reversible potential [V vs ref] of the anodic OR cathodic reaction of the Tafel region that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>fit_results (<code class="xref py py-class docutils literal notranslate"><span class="pre">2xN</span> <span class="pre">array</span></code>) - the fit to the data [current densities (N-array), potentials (N-array)]</p></li>
+<li><p>E_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion potential [V vs ref]</p></li>
+<li><p>I_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion rate (if the corrosion potential is given as input) [A/surface area]</p></li>
+<li><p>b (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the obtained Tafel slope [V]</p></li>
+<li><p>RMSE (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the root mean squared error of the fit</p></li>
+<li><p>io (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - Only returned, if obtain_io is True. The exchange current density [A/surface area].</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="polcurvefit.PolCurveFit.mixed_pol_fit">
+<code class="descname">mixed_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.01</em>, <em>i_L_guess=10</em>, <em>fix_i_L=False</em>, <em>apply_weight_distribution=False</em>, <em>w_ac=0.04</em>, <em>W=75</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.mixed_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.mixed_pol_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitting of a theoretical description, representative for the anodic activation controlled currents and cathodic mixed activation-diffusion controlled currents.
+This option is suitable for data of which the anodic is under activation control and the cathodic branche are under mixed activation-diffusion control.
+Describe the weight distribution !!!!!!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window</strong> (<em>2-length sequence</em>) – Lower and upper bounds of the data to be fitted, relative to the corrosion potential [min value, max value], units [V vs E_corr]</p></li>
+<li><p><strong>i_corr_guess</strong> (<em>float</em>) – First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</p></li>
+<li><p><strong>i_L_guess</strong> (<em>float</em>) – First guess of the limiting current density (optional) [A/surface area], it can to faster convergence and a more accurate fit (Default: 10^1).</p></li>
+<li><p><strong>fix_i_L</strong> (<em>bool</em>) – If True, the limiting current density is fixed at the value of i_L_guess. (Default:False)</p></li>
+<li><p><strong>apply_weight_distribution</strong> (<em>bool</em>) – If True, the data within w_ac are given a certain percentage, W, of the overall weight. The application of this weight distribution leads generally to more consistent and accurate results.</p></li>
+<li><p><strong>w_ac</strong> (<em>float</em>) – determines the window activation control: the window around corrosion potential (E_corr) [-w_ac,+w_ac [V vs E_corr]], in which the data are given a certain weight percentage, W, of the overall weight of the data.</p></li>
+<li><p><strong>W</strong> (<em>float</em>) – The percentage of the weight assigned to the data within +/-w_ac around the corrosion potential.</p></li>
+<li><p><strong>obtain_io</strong> – If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</p></li>
+<li><p><strong>E_rev_an</strong> (<em>float</em>) – The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
+<li><p><strong>E_rev_cath</strong> (<em>float</em>) – The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Return fit_results</dt>
+<dd class="field-odd"><p>the fit to the data [current densities (N-array), potentials (N-array)]</p>
+</dd>
+<dt class="field-even">Rtype fit_results</dt>
+<dd class="field-even"><p>2xN array</p>
+</dd>
+<dt class="field-odd">Return E_corr</dt>
+<dd class="field-odd"><p>the corrosion potential [V vs ref]</p>
+</dd>
+<dt class="field-even">Rtype E_corr</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return I_corr</dt>
+<dd class="field-odd"><p>the corrosion rate (if the corrosion potential is given as input) [A/surface area]</p>
+</dd>
+<dt class="field-even">Rtype I_corr</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return b_an</dt>
+<dd class="field-odd"><p>the obtained anodic Tafel slope [V]</p>
+</dd>
+<dt class="field-even">Rtype b_an</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return b_cath</dt>
+<dd class="field-odd"><p>the obtained cathodic Tafel slope [V]</p>
+</dd>
+<dt class="field-even">Rtype b_cath</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return i_L</dt>
+<dd class="field-odd"><p>the obtained limiting current density [A/surface area]</p>
+</dd>
+<dt class="field-even">Rtype i_L</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return RMSE</dt>
+<dd class="field-odd"><p>the root mean squared error of the fit</p>
+</dd>
+<dt class="field-even">Rtype RMSE</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return gamma</dt>
+<dd class="field-odd"><p>The obtained gamma [-]</p>
+</dd>
+<dt class="field-even">Rtype gamma</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Return io_an</dt>
+<dd class="field-odd"><p>Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</p>
+</dd>
+<dt class="field-even">Rtype io_an</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Return io_cath</dt>
+<dd class="field-odd"><p>Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</p>
+</dd>
+<dt class="field-even">Rtype io_cath</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="polcurvefit.PolCurveFit.plotting">
+<code class="descname">plotting</code><span class="sig-paren">(</span><em>output_folder='plots_out'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.plotting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.plotting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualization of the results obtained from the fitting. It plots 4 figures:
+data: plot of the raw data as given as input (no IR correction or correction for the surface are applied)
+fit_linear: plot of the observed data and the fit
+fit_semilogarithmic: plot of the observed data and the fit in semilogarithmic scale
+results_overview: plot of the observed data and the obtained Tafel slope(s) (and limiting current density)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>output_folder</strong> (<em>string</em>) – Directory in which the figures are safed. (Default: ‘plots_out’)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="polcurvefit.PolCurveFit.sens_analysis">
+<code class="descname">sens_analysis</code><span class="sig-paren">(</span><em>window, start_diffusion_control, importance=[50, 70, 80, 90, 0], i_corr_guess=0.01, i_L_guess=10, fix_i_L=False, output_folder='sensitivity_analysis'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.sens_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.sens_analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sensitivity analysis of the ‘mixed activation-diffusion control fit’ to the set parameters for the weight distribution.
+It returns 5 plots, showing the effect of the importance &amp; w_acon on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).
+The 5 kind of plots are safed in different folders in the output_folder:</p>
+<p>effect_importance –&gt; The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)</p>
+<p>effect_importance_fluctuation –&gt; The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)</p>
+<p>effect_importance_il –&gt; The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)</p>
+<p>effect_window_act_control –&gt; The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)</p>
+<p>effect_window_act_control_fluctuation –&gt; The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window</strong> (<em>2-length sequence</em>) – Lower and upper bounds of the total data to be taken into account in the analysis, relative to the corrosion potential [min value, max value], units [V vs E_corr]</p></li>
+<li><p><strong>start_diffusion_control</strong> (<em>float</em>) – (An estimation of)the potential versus the corrosion potential (E_corr) at which the diffusion controlled domain starts [V vs E_corr]</p></li>
+<li><p><strong>importance</strong> (<em>M-length sequence</em>) – array contaning a number M of different values for importance [%] to take into account in the analysis. An importance of 0% equals the case where no weight distribution is applied. (Default: [50,70,80,90,0])</p></li>
+<li><p><strong>i_corr_guess</strong> (<em>float</em>) – First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</p></li>
+<li><p><strong>i_L_guess</strong> (<em>float</em>) – First guess of the limiting current density (optional) [A/surface area], it can to faster convergence and a more accurate fit (Default: 10^1).</p></li>
+<li><p><strong>fix_i_L</strong> (<em>bool</em>) – If True, the limiting current density is fixed at the value of i_L_guess. (Default:False)</p></li>
+<li><p><strong>output_foler</strong> – The main output directory in which the 5 directories with figures will be saved (Default:’sensitivity_analysis’)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../../index.html" class="btn btn-neutral float-left" title="Welcome to PolCurveFit’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../examples/getting_started.html" class="btn btn-neutral float-right" title="Getting started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Meeke van Ede.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

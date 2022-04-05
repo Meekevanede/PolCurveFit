@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>polcurvefit.polcurvefit &mdash; PolCurveFit  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> PolCurveFit
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Python Class PolCurveFit</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source/api/polcurvefit.html">PolCurveFit</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source/examples/getting_started.html">Getting started</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example1.html">Example 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example2.html">Example 2</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PolCurveFit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>polcurvefit.polcurvefit</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for polcurvefit.polcurvefit</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+<span class="kn">from</span> <span class="nn">polcurvefit.forward</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.offsetbox</span> <span class="kn">import</span> <span class="n">AnchoredText</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">colours</span>
+
+<div class="viewcode-block" id="PolCurveFit"><a class="viewcode-back" href="../../source/api/polcurvefit.html#polcurvefit.PolCurveFit">[docs]</a><span class="k">class</span> <span class="nc">PolCurveFit</span><span class="p">:</span>
+	
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	PolCurveFit is a python library that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, </span>
+<span class="sd">	Tafel slopes, corrosion current density and exchange current densities. The data can be fitted with 3 techniques: Tafel extrapolation (linear fit), </span>
+<span class="sd">	&#39;Activation control fit&#39; &amp; &#39;mixed activation-diffusion control fit&#39;.</span>
+
+<span class="sd">	:param E: The electrical potentials [V vs ref]</span>
+<span class="sd">	:type E: N-length sequence</span>
+
+<span class="sd">	:param I: The electrical current or current density [A or A/area]</span>
+<span class="sd">	:type I: N-length sequence</span>
+
+<span class="sd">	:param R: The resistance, to correct for the voltage drop (IR-drop/ohmic potential drop) [Ohm] (Default = 0.0)</span>
+<span class="sd">	:type R: float</span>
+
+<span class="sd">	:param sample_surface: The surface area of the metal sample surface measured. This used to convert from current to current density. If I is already the current density, use the default. If the surface area is not given, the obtained corrosion rates and exchange current density are simply currents (default = 1.0).</span>
+<span class="sd">	:type sample_surface: float</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">sample_surface</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">=</span> <span class="n">E</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">I</span> <span class="o">=</span> <span class="n">I</span>
+
+		<span class="k">if</span> <span class="n">E</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="n">E</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">E_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span>
+		<span class="c1"># IR correction</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ir_correction</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+		<span class="c1"># obtain current density</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="o">/</span><span class="n">sample_surface</span>
+
+	<span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+		
+<span class="c1">############################## Tafel extrapolation (Linear fit)  ###################</span>
+<span class="c1">####################################################################################</span>
+<div class="viewcode-block" id="PolCurveFit.linear_fit"><a class="viewcode-back" href="../../source/api/polcurvefit.html#polcurvefit.PolCurveFit.linear_fit">[docs]</a>	<span class="k">def</span> <span class="nf">linear_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">E_corr</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">obtain_io</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">E_rev</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Fitting of a linear line to the data. This option is suitable for data which is solely under activation control on the anodic </span>
+<span class="sd">		or on the cathodic branch. It fits a linear line the data in the selected window. If the corrosion potential E_corr is given,</span>
+<span class="sd">		the returned I_corr relects the corrosion rate.</span>
+<span class="sd">		</span>
+<span class="sd">		:param window: Lower and upper bounds of the data to be fitted [min value, max value], units [V vs ref] </span>
+<span class="sd">		:type window: 2-length sequence</span>
+
+<span class="sd">		:param E_corr: The corrosion potential (OCP) [V vs ref]. If specified, the returned I_corr_best reflects the corrosion rate. (Default: 0.0)</span>
+<span class="sd">		:type E_corr: float</span>
+
+<span class="sd">		:param obtain_io: If True, the (cathodic OR anodic) exchange current density will be determined from the obtained Tafel slope and E_rev. (Default: False)</span>
+<span class="sd">		:type obtain_io: bool</span>
+
+<span class="sd">		:param E_rev: The reversible potential [V vs ref] of the anodic OR cathodic reaction of the Tafel region that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
+<span class="sd">		:type E_rev: float</span>
+
+<span class="sd">		:returns: </span>
+<span class="sd">			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]</span>
+<span class="sd">			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]</span>
+<span class="sd">			- I_corr (:py:class:`float`) - the corrosion rate (if the corrosion potential is given as input) [A/surface area]</span>
+<span class="sd">			- b (:py:class:`float`) - the obtained Tafel slope [V]</span>
+<span class="sd">			- RMSE (:py:class:`float`) - the root mean squared error of the fit</span>
+<span class="sd">			- io (:py:class:`float`) - Only returned, if obtain_io is True. The exchange current density [A/surface area].</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="c1"># select data in specified window</span>
+		<span class="n">E_cut</span><span class="p">,</span> <span class="n">I_cut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowcut</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+
+		<span class="c1"># fitting</span>
+		<span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">E_cut</span><span class="p">),</span><span class="mi">1</span><span class="p">))</span>
+		<span class="n">xdata</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_cut</span>
+		<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">linear_fit</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">I_cut</span><span class="p">))))</span>
+		<span class="n">d_final</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">linear_fit</span><span class="p">(</span><span class="n">E_cut</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+		<span class="k">if</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+			<span class="n">d_final</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">d_final</span>
+		
+		<span class="c1"># Compute root mean squared error</span>
+		<span class="n">RMSE</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">I_cut</span><span class="o">-</span><span class="n">d_final</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+		<span class="c1"># Obtain real corrosion rate (if E_corr is given as input)</span>
+		<span class="n">I_corr_best</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">E_corr</span> <span class="o">+</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> 
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">E_corr</span> <span class="o">=</span> <span class="n">E_corr</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">I_corr</span> <span class="o">=</span> <span class="n">I_corr_best</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b_a</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b_c</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">i_L</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="c1"># compute exchange current density	</span>
+		<span class="k">if</span> <span class="n">obtain_io</span><span class="p">:</span>
+			<span class="n">io</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_exchcurrent</span><span class="p">(</span><span class="n">I_corr_best</span><span class="p">,</span><span class="n">E_corr</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">E_rev</span><span class="p">)</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">I_corr_best</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">RMSE</span><span class="p">,</span> <span class="n">io</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">I_corr_best</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">RMSE</span></div>
+
+
+<span class="c1">############################## Activation control fit ########################</span>
+<span class="c1">##############################################################################</span>
+<div class="viewcode-block" id="PolCurveFit.active_pol_fit"><a class="viewcode-back" href="../../source/api/polcurvefit.html#polcurvefit.PolCurveFit.active_pol_fit">[docs]</a>	<span class="k">def</span> <span class="nf">active_pol_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">window</span><span class="p">,</span> <span class="n">i_corr_guess</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">2</span><span class="p">,</span> <span class="n">obtain_io</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">E_rev_an</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">E_rev_cath</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Fitting of a theoretical description, representative for the anodic and cathodic activation controlled currents around the Corrosion potential (OCP).</span>
+<span class="sd">		This option is suitable for data of which the anodic and cathodic branches are solely under activation control.</span>
+<span class="sd">		</span>
+<span class="sd">		:param window: Lower and upper bounds of the data to be fitted, relative to the corrosion potential [min value, max value], units [V vs E_corr] </span>
+<span class="sd">		:type window: 2-length sequence</span>
+
+<span class="sd">		:param i_corr_guess: First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</span>
+<span class="sd">		:type i_corr_guess: float</span>
+
+<span class="sd">		:param obtain_io: If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</span>
+<span class="sd">		:type: bool </span>
+
+<span class="sd">		:param E_rev_an: The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
+<span class="sd">		:type E_rev_an: float</span>
+
+<span class="sd">		:param E_rev_cath: The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
+<span class="sd">		:type E_rev_cath: float</span>
+
+<span class="sd">		:return fit_results: the fit to the data [current densities (N-array), potentials (N-array)]</span>
+<span class="sd">		:rtype fit_results: 2xN array</span>
+
+<span class="sd">		:return E_corr: the corrosion potential [V vs ref]</span>
+<span class="sd">		:rtype E_corr: float</span>
+
+<span class="sd">		:return I_corr: the corrosion rate (if the corrosion potential is given as input) [A/surface area]</span>
+<span class="sd">		:rtype I_corr: float</span>
+
+<span class="sd">		:return b_an: the obtained anodic Tafel slope [V]</span>
+<span class="sd">		:rtype b_an: float</span>
+
+<span class="sd">		:return b_cath: the obtained cathodic Tafel slope [V]</span>
+<span class="sd">		:rtype b_cath: float</span>
+
+<span class="sd">		:return RMSE: the root mean squared error of the fit</span>
+<span class="sd">		:rtype RMSE: float</span>
+
+<span class="sd">		:return io_an: Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</span>
+<span class="sd">		:rtype io_an: float</span>
+<span class="sd">		</span>
+<span class="sd">		:return io_cath: Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</span>
+<span class="sd">		:rtype io_cath: float</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="c1"># obtain E_corr</span>
+		<span class="n">E_corr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_Ecorr</span><span class="p">()</span>
+
+		<span class="c1"># select data in specified window</span>
+		<span class="n">E_cut</span><span class="p">,</span> <span class="n">I_cut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowcut</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span><span class="n">E_corr</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+
+		<span class="c1"># fitting</span>
+		<span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">E_cut</span><span class="p">),</span><span class="mi">2</span><span class="p">))</span>
+		<span class="n">xdata</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_cut</span>
+		<span class="n">xdata</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_corr</span>
+		<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">forward_normal</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">I_cut</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_corr_guess</span><span class="p">),</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="mf">0.100</span><span class="p">],</span> <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+		<span class="n">d_final</span> <span class="o">=</span> <span class="n">forward_normal</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+		<span class="n">d_final</span><span class="p">[</span><span class="n">d_final</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1E-8</span> <span class="c1"># to get rid of zeros</span>
+		<span class="n">RMSE</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">I_cut</span><span class="o">-</span><span class="n">d_final</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">E_corr</span> <span class="o">=</span> <span class="n">E_corr</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">I_corr</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b_a</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b_c</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">i_L</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+		<span class="k">if</span> <span class="n">obtain_io</span><span class="p">:</span>
+			<span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_exchcurrent</span><span class="p">(</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">E_corr</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">E_rev_an</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">E_rev_cath</span><span class="p">)</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">RMSE</span><span class="p">,</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">RMSE</span></div>
+
+
+<span class="c1">############################## Mixed activation-difussion control fit #############</span>
+<span class="c1">###################################################################################</span>
+<div class="viewcode-block" id="PolCurveFit.mixed_pol_fit"><a class="viewcode-back" href="../../source/api/polcurvefit.html#polcurvefit.PolCurveFit.mixed_pol_fit">[docs]</a>	<span class="k">def</span> <span class="nf">mixed_pol_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">window</span><span class="p">,</span> <span class="n">i_corr_guess</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">2</span><span class="p">,</span> <span class="n">i_L_guess</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">1</span><span class="p">,</span> <span class="n">fix_i_L</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">apply_weight_distribution</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">w_ac</span> <span class="o">=</span> <span class="mf">0.04</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="mi">75</span><span class="p">,</span> <span class="n">obtain_io</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">E_rev_an</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">E_rev_cath</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+		
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Fitting of a theoretical description, representative for the anodic activation controlled currents and cathodic mixed activation-diffusion controlled currents.</span>
+<span class="sd">		This option is suitable for data of which the anodic is under activation control and the cathodic branche are under mixed activation-diffusion control.</span>
+<span class="sd">		Describe the weight distribution !!!!!!</span>
+<span class="sd">		</span>
+<span class="sd">		:param window: Lower and upper bounds of the data to be fitted, relative to the corrosion potential [min value, max value], units [V vs E_corr] </span>
+<span class="sd">		:type window: 2-length sequence</span>
+
+<span class="sd">		:param i_corr_guess: First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</span>
+<span class="sd">		:type i_corr_guess: float</span>
+<span class="sd">		</span>
+<span class="sd">		:param i_L_guess: First guess of the limiting current density (optional) [A/surface area], it can to faster convergence and a more accurate fit (Default: 10^1).</span>
+<span class="sd">		:type i_L_guess: float</span>
+<span class="sd">		</span>
+<span class="sd">		:param fix_i_L: If True, the limiting current density is fixed at the value of i_L_guess. (Default:False)</span>
+<span class="sd">		:type fix_i_L: bool</span>
+
+<span class="sd">		:param apply_weight_distribution: If True, the data within w_ac are given a certain percentage, W, of the overall weight. The application of this weight distribution leads generally to more consistent and accurate results.</span>
+<span class="sd">		:type apply_weight_distribution: bool</span>
+
+<span class="sd">		:param w_ac: determines the window activation control: the window around corrosion potential (E_corr) [-w_ac,+w_ac [V vs E_corr]], in which the data are given a certain weight percentage, W, of the overall weight of the data.</span>
+<span class="sd">		:type w_ac: float</span>
+<span class="sd">		</span>
+<span class="sd">		:param W: The percentage of the weight assigned to the data within +/-w_ac around the corrosion potential. </span>
+<span class="sd">		:type W: float</span>
+
+<span class="sd">		:param obtain_io: If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</span>
+<span class="sd">		:type: bool </span>
+
+<span class="sd">		:param E_rev_an: The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
+<span class="sd">		:type E_rev_an: float</span>
+
+<span class="sd">		:param E_rev_cath: The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
+<span class="sd">		:type E_rev_cath: float</span>
+
+<span class="sd">		:return fit_results: the fit to the data [current densities (N-array), potentials (N-array)]</span>
+<span class="sd">		:rtype fit_results: 2xN array</span>
+
+<span class="sd">		:return E_corr: the corrosion potential [V vs ref]</span>
+<span class="sd">		:rtype E_corr: float</span>
+
+<span class="sd">		:return I_corr: the corrosion rate (if the corrosion potential is given as input) [A/surface area]</span>
+<span class="sd">		:rtype I_corr: float</span>
+
+<span class="sd">		:return b_an: the obtained anodic Tafel slope [V]</span>
+<span class="sd">		:rtype b_an: float</span>
+
+<span class="sd">		:return b_cath: the obtained cathodic Tafel slope [V]</span>
+<span class="sd">		:rtype b_cath: float</span>
+
+<span class="sd">		:return i_L: the obtained limiting current density [A/surface area]</span>
+<span class="sd">		:rtype i_L: float</span>
+
+<span class="sd">		:return RMSE: the root mean squared error of the fit</span>
+<span class="sd">		:rtype RMSE: float</span>
+
+<span class="sd">		:return gamma: The obtained gamma [-]</span>
+<span class="sd">		:rtype gamma: int</span>
+
+<span class="sd">		:return io_an: Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</span>
+<span class="sd">		:rtype io_an: float</span>
+<span class="sd">		</span>
+<span class="sd">		:return io_cath: Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</span>
+<span class="sd">		:rtype io_cath: float</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="c1"># obtain E_corr</span>
+		<span class="n">E_corr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_Ecorr</span><span class="p">()</span>
+
+		<span class="c1"># select data in specified window</span>
+		<span class="n">E_cut</span><span class="p">,</span> <span class="n">I_cut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowcut</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span><span class="n">E_corr</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+
+		<span class="c1"># define standard error for fitting</span>
+		<span class="k">if</span> <span class="n">apply_weight_distribution</span><span class="p">:</span>
+			<span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_weight_distribution</span><span class="p">(</span><span class="n">E_cut</span><span class="p">,</span> <span class="n">I_cut</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,</span> <span class="n">w_ac</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">E_cut</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+
+		<span class="c1"># fitting</span>
+		<span class="n">xdata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">E_cut</span><span class="p">),</span><span class="mi">2</span><span class="p">))</span>
+		<span class="n">xdata</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_cut</span>
+		<span class="n">xdata</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">E_corr</span>
+		<span class="k">if</span> <span class="n">fix_i_L</span><span class="p">:</span>
+			<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">I_cut</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_corr_guess</span><span class="p">),</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="mf">0.100</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_L_guess</span><span class="p">),</span><span class="mi">3</span> <span class="p">],</span> <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_L_guess</span><span class="p">)</span><span class="o">-</span><span class="mf">0.01</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_L_guess</span><span class="p">)</span><span class="o">+</span><span class="mf">0.01</span><span class="p">,</span><span class="mi">4</span><span class="p">)))</span>
+			<span class="n">d_final</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+			<span class="n">d_final</span><span class="p">[</span><span class="n">d_final</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1E-8</span>  <span class="c1"># to get rid of zeros</span>
+			<span class="n">obj_func</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">I_cut</span><span class="o">-</span><span class="n">d_final</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">I_cut</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_corr_guess</span><span class="p">),</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="mf">0.100</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_L_guess</span><span class="p">),</span><span class="mi">3</span> <span class="p">],</span> <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)))</span> 
+			<span class="n">d_final</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+			<span class="n">d_final</span><span class="p">[</span><span class="n">d_final</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1E-8</span>  <span class="c1"># to get rid of zeros</span>
+			<span class="n">obj_func</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">I_cut</span><span class="o">-</span><span class="n">d_final</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+		
+		<span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">E_corr</span> <span class="o">=</span> <span class="n">E_corr</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">I_corr</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b_a</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">b_c</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">i_L</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="n">obtain_io</span><span class="p">:</span>
+			<span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_exchcurrent</span><span class="p">(</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">E_corr</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">E_rev_an</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">E_rev_cath</span><span class="p">)</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></div>
+	
+
+<span class="c1">########################### Sensitivity analysis #############################</span>
+<span class="c1">##############################################################################</span>
+
+<div class="viewcode-block" id="PolCurveFit.sens_analysis"><a class="viewcode-back" href="../../source/api/polcurvefit.html#polcurvefit.PolCurveFit.sens_analysis">[docs]</a>	<span class="k">def</span> <span class="nf">sens_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">start_diffusion_control</span><span class="p">,</span> <span class="n">importance</span> <span class="o">=</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span><span class="mi">70</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">90</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">i_corr_guess</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">2</span><span class="p">,</span> <span class="n">i_L_guess</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">1</span><span class="p">,</span> <span class="n">fix_i_L</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">output_folder</span><span class="o">=</span><span class="s1">&#39;sensitivity_analysis&#39;</span><span class="p">):</span>
+		
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Sensitivity analysis of the &#39;mixed activation-diffusion control fit&#39; to the set parameters for the weight distribution.</span>
+<span class="sd">		It returns 5 plots, showing the effect of the importance &amp; w_acon on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).</span>
+<span class="sd">		The 5 kind of plots are safed in different folders in the output_folder:</span>
+
+<span class="sd">		effect_importance --&gt; The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)</span>
+
+<span class="sd">		effect_importance_fluctuation --&gt; The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)</span>
+
+<span class="sd">		effect_importance_il --&gt; The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)</span>
+
+<span class="sd">		effect_window_act_control --&gt; The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)</span>
+
+<span class="sd">		effect_window_act_control_fluctuation --&gt; The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)</span>
+
+<span class="sd">		:param window: Lower and upper bounds of the total data to be taken into account in the analysis, relative to the corrosion potential [min value, max value], units [V vs E_corr] </span>
+<span class="sd">		:type window: 2-length sequence</span>
+
+<span class="sd">		:param start_diffusion_control: (An estimation of)the potential versus the corrosion potential (E_corr) at which the diffusion controlled domain starts [V vs E_corr]</span>
+<span class="sd">		:type start_diffusion_control: float</span>
+
+<span class="sd">		:param importance: array contaning a number M of different values for importance [%] to take into account in the analysis. An importance of 0% equals the case where no weight distribution is applied. (Default: [50,70,80,90,0])</span>
+<span class="sd">		:type importance: M-length sequence</span>
+<span class="sd">		</span>
+<span class="sd">		:param i_corr_guess: First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</span>
+<span class="sd">		:type i_corr_guess: float</span>
+<span class="sd">		</span>
+<span class="sd">		:param i_L_guess: First guess of the limiting current density (optional) [A/surface area], it can to faster convergence and a more accurate fit (Default: 10^1).</span>
+<span class="sd">		:type i_L_guess: float</span>
+<span class="sd">		</span>
+<span class="sd">		:param fix_i_L: If True, the limiting current density is fixed at the value of i_L_guess. (Default:False)</span>
+<span class="sd">		:type fix_i_L: bool</span>
+
+<span class="sd">		:param output_foler: The main output directory in which the 5 directories with figures will be saved (Default:&#39;sensitivity_analysis&#39;)</span>
+<span class="sd">		:type output_folder: string</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="c1"># Initializing parameter search</span>
+		<span class="n">window_cat_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">0.020</span><span class="p">,</span> <span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mf">0.010</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.010</span><span class="p">)</span>
+		<span class="n">w_ac_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.010</span><span class="p">,</span><span class="nb">abs</span><span class="p">(</span><span class="n">start_diffusion_control</span><span class="p">)</span><span class="o">+</span><span class="mf">0.010</span><span class="p">,</span><span class="mf">0.010</span><span class="p">)</span>
+		<span class="n">importance_</span> <span class="o">=</span> <span class="n">importance</span>
+
+		<span class="c1"># Initializing panda data frame</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">:</span> <span class="p">[],</span>
+							<span class="s1">&#39;i_L_best&#39;</span><span class="p">:</span> <span class="p">[],</span>
+	                       <span class="s1">&#39;window_cat&#39;</span><span class="p">:[],</span> 
+	                      <span class="s1">&#39;w_ac&#39;</span><span class="p">:</span> <span class="p">[],</span>
+	                      <span class="s1">&#39;importance&#39;</span><span class="p">:[]})</span>
+
+		<span class="c1"># Obtaining fitting results - parameter search</span>
+		<span class="k">for</span> <span class="n">window_cat</span> <span class="ow">in</span> <span class="n">window_cat_</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
+				<span class="k">for</span> <span class="n">importance</span> <span class="ow">in</span> <span class="n">importance_</span><span class="p">:</span>
+					<span class="k">if</span> <span class="o">-</span><span class="n">w_ac</span><span class="o">&gt;</span><span class="n">window_cat</span><span class="p">:</span>
+						<span class="k">if</span> <span class="n">importance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+							<span class="n">fitted_curve</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,</span> <span class="n">I_corr_best</span><span class="p">,</span> <span class="n">b_a_best</span><span class="p">,</span> <span class="n">b_c_best</span><span class="p">,</span> <span class="n">i_L_best</span><span class="p">,</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixed_pol_fit</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">[</span><span class="n">window_cat</span><span class="p">,</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">i_corr_guess</span> <span class="o">=</span> <span class="n">i_corr_guess</span><span class="p">,</span> <span class="n">fix_i_L</span> <span class="o">=</span> <span class="n">fix_i_L</span><span class="p">,</span> <span class="n">i_L_guess</span> <span class="o">=</span> <span class="n">i_L_guess</span><span class="p">,</span> <span class="n">apply_weight_distribution</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+						<span class="k">else</span><span class="p">:</span>
+							<span class="n">fitted_curve</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,</span> <span class="n">I_corr_best</span><span class="p">,</span> <span class="n">b_a_best</span><span class="p">,</span> <span class="n">b_c_best</span><span class="p">,</span> <span class="n">i_L_best</span><span class="p">,</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixed_pol_fit</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">[</span><span class="n">window_cat</span><span class="p">,</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">i_corr_guess</span> <span class="o">=</span> <span class="n">i_corr_guess</span><span class="p">,</span> <span class="n">fix_i_L</span> <span class="o">=</span> <span class="n">fix_i_L</span><span class="p">,</span> <span class="n">i_L_guess</span> <span class="o">=</span> <span class="n">i_L_guess</span><span class="p">,</span> <span class="n">apply_weight_distribution</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">w_ac</span> <span class="o">=</span> <span class="n">w_ac</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">importance</span><span class="p">)</span>
+						<span class="n">df_temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">b_c_best</span><span class="p">],</span> <span class="s1">&#39;i_L_best&#39;</span><span class="p">:[</span><span class="n">i_L_best</span><span class="p">],</span><span class="s1">&#39;window_cat&#39;</span><span class="p">:[</span><span class="n">window_cat</span><span class="p">],</span> <span class="s1">&#39;w_ac&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">w_ac</span><span class="p">],</span><span class="s1">&#39;importance&#39;</span><span class="p">:[</span><span class="n">importance</span><span class="p">]})</span>
+						<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df_temp</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+		<span class="c1"># plotting</span>
+
+		<span class="c1"># making the directories</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_importance_il&#39;</span><span class="p">)</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_importance&#39;</span><span class="p">)</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_importance_fluctuation&#39;</span><span class="p">)</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_window_act_control&#39;</span><span class="p">)</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_window_act_control_fluctuation&#39;</span><span class="p">)</span>
+
+		<span class="k">except</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Output folder exists - plots will be overwritten&#39;</span><span class="p">)</span>
+
+		<span class="c1"># defining colorscale for plot 4 &amp; 5</span>
+		<span class="n">colors</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Reds</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_ac_</span><span class="p">)))</span>
+		
+		<span class="c1"># plot 1: effect_importance</span>
+		<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+			<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+			<span class="k">for</span> <span class="n">importance</span> <span class="ow">in</span> <span class="n">importance_</span><span class="p">:</span>				
+				<span class="n">df_select</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">w_ac</span><span class="p">]</span>
+				<span class="n">df_select</span> <span class="o">=</span> <span class="n">df_select</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span><span class="o">==</span> <span class="n">importance</span><span class="p">]</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+				<span class="n">y</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+				
+				<span class="k">if</span> <span class="n">importance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;-k&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;not weighted&#39;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;W = &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39; %&#39;</span><span class="p">)</span>
+
+			<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\beta_</span><span class="si">{cath}</span><span class="s1">$ [V/dec]&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;cathodic window [V from OCP]&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.04</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;window activation control = &#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">w_ac</span> <span class="o">+</span> <span class="s1">&#39; mV&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+			<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span><span class="s1">&#39;/effect_importance/wac=&#39;</span> <span class="o">+</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">w_ac</span><span class="o">+</span><span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+
+		<span class="c1"># plot 2: effect_importance_fluctuation</span>
+		<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+			<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+			<span class="k">for</span> <span class="n">importance</span> <span class="ow">in</span> <span class="n">importance_</span><span class="p">:</span>				
+				<span class="n">df_select</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">w_ac</span><span class="p">]</span>
+				<span class="n">df_select</span> <span class="o">=</span> <span class="n">df_select</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span><span class="o">==</span> <span class="n">importance</span><span class="p">]</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+				<span class="n">y</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+				<span class="n">y_fluc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluc</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+				
+				<span class="k">if</span> <span class="n">importance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y_fluc</span><span class="p">,</span> <span class="s1">&#39;-k&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;not weighted&#39;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y_fluc</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;W = &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39; %&#39;</span><span class="p">)</span>
+
+			<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;relative change of $\beta_</span><span class="si">{cath}</span><span class="s1">$ [V/dec]&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;cathodic window [V from OCP]&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.04</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;window activation control = &#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">w_ac</span> <span class="o">+</span> <span class="s1">&#39; mV&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+			<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span><span class="s1">&#39;/effect_importance_fluctuation/wac=&#39;</span> <span class="o">+</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">w_ac</span><span class="o">+</span><span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+		<span class="c1"># plot 3: effect_importance_il</span>
+		<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+			<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+			<span class="k">for</span> <span class="n">importance</span> <span class="ow">in</span> <span class="n">importance_</span><span class="p">:</span>				
+				<span class="n">df_select</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">w_ac</span><span class="p">]</span>
+				<span class="n">df_select</span> <span class="o">=</span> <span class="n">df_select</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span><span class="o">==</span> <span class="n">importance</span><span class="p">]</span>
+				<span class="n">x</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+				<span class="n">y</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;i_L_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+				
+				<span class="k">if</span> <span class="n">importance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">10</span><span class="o">**</span><span class="n">y</span><span class="p">,</span><span class="s1">&#39;-k&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;not weighted&#39;</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">10</span><span class="o">**</span><span class="n">y</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;W = &#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39; %&#39;</span><span class="p">)</span>
+
+			<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$i_</span><span class="si">{L}</span><span class="s1">$ [A/m$^2$]&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;cathodic window [V from OCP]&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.04</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;window activation control = &#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">w_ac</span> <span class="o">+</span> <span class="s1">&#39; mV&#39;</span><span class="p">)</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+			<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span><span class="s1">&#39;/effect_importance_il/wac=&#39;</span> <span class="o">+</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">w_ac</span> <span class="o">+</span><span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+		<span class="c1"># plot 4: effect_window_act_control</span>
+		<span class="k">for</span> <span class="n">importance</span> <span class="ow">in</span> <span class="n">importance_</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">importance</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+				<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+				<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+				<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
+					<span class="n">df_select</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">w_ac</span><span class="p">]</span>	
+					<span class="n">df_select</span> <span class="o">=</span> <span class="n">df_select</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">importance</span><span class="p">]</span>
+					<span class="n">x</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+					<span class="n">y</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+										
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">w_ac</span><span class="p">))</span>
+					<span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+
+				<span class="n">df_select_notweighted</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span><span class="o">==</span><span class="mf">0.01</span><span class="p">)]</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df_select_notweighted</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span><span class="n">df_select_notweighted</span><span class="p">[</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="s1">&#39;--k&#39;</span><span class="p">)</span>
+				<span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">truncate_colormap</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Reds&#39;</span><span class="p">),</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+				<span class="n">norm</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">w_ac_</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">vmax</span><span class="o">=</span><span class="n">w_ac_</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\beta_</span><span class="si">{cath}</span><span class="s1">$ [V/dec]&#39;</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">])</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;cathodic window [V from OCP]&#39;</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;w$_</span><span class="si">{ac}</span><span class="s1">$ [V]&#39;</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Weight (W) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;%&#39;</span><span class="p">)</span>
+				<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_window_act_control/W=&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+		<span class="c1"># plot 5: effect_window_act_control_fluctuation</span>
+		<span class="k">for</span> <span class="n">importance</span> <span class="ow">in</span> <span class="n">importance_</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">importance</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+				<span class="n">fig</span><span class="p">,</span><span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+				<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+				<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
+					<span class="n">df_select</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">w_ac</span><span class="p">]</span>	
+					<span class="n">df_select</span> <span class="o">=</span> <span class="n">df_select</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">importance</span><span class="p">]</span>
+					<span class="n">x</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+					<span class="n">y</span> <span class="o">=</span> <span class="n">df_select</span><span class="p">[</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+					
+					<span class="n">y_fluc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluc</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+					<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y_fluc</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">w_ac</span><span class="p">))</span>
+					<span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+				
+				<span class="n">df_select_notweighted</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;importance&#39;</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;w_ac&#39;</span><span class="p">]</span><span class="o">==</span><span class="mf">0.01</span><span class="p">)]</span>
+				<span class="n">y</span> <span class="o">=</span> <span class="n">df_select_notweighted</span><span class="p">[</span><span class="s1">&#39;b_c_best&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+				<span class="n">y_fluc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_fluc</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">df_select_notweighted</span><span class="p">[</span><span class="s1">&#39;window_cat&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span><span class="n">y_fluc</span><span class="p">,</span> <span class="s1">&#39;--k&#39;</span><span class="p">)</span>
+				<span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">truncate_colormap</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Reds&#39;</span><span class="p">),</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+				<span class="n">norm</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">w_ac_</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">vmax</span><span class="o">=</span><span class="n">w_ac_</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;relative change of $\beta_</span><span class="si">{cath}</span><span class="s1">$ [V/dec]&#39;</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;cathodic window [V from OCP]&#39;</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span><span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;w$_</span><span class="si">{ac}</span><span class="s1">$ [V]&#39;</span><span class="p">)</span>
+				<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;weight (W) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;%&#39;</span><span class="p">)</span>
+				<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_window_act_control_fluctuation/W=&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">importance</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span></div>
+
+
+<span class="c1">############################## Plotting ######################################</span>
+<span class="c1">##############################################################################</span>
+
+	
+<div class="viewcode-block" id="PolCurveFit.plotting"><a class="viewcode-back" href="../../source/api/polcurvefit.html#polcurvefit.PolCurveFit.plotting">[docs]</a>	<span class="k">def</span> <span class="nf">plotting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;plots_out&#39;</span><span class="p">):</span>
+
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Visualization of the results obtained from the fitting. It plots 4 figures:</span>
+<span class="sd">		data: plot of the raw data as given as input (no IR correction or correction for the surface are applied)</span>
+<span class="sd">		fit_linear: plot of the observed data and the fit</span>
+<span class="sd">		fit_semilogarithmic: plot of the observed data and the fit in semilogarithmic scale</span>
+<span class="sd">		results_overview: plot of the observed data and the obtained Tafel slope(s) (and limiting current density)</span>
+
+<span class="sd">		:param output_folder: Directory in which the figures are safed. (Default: &#39;plots_out&#39;)</span>
+<span class="sd">		:type output_folder: string</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Output folder exists - plots will be overwritten&#39;</span><span class="p">)</span>
+
+		<span class="c1"># plot 1: data</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+		<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E_obs</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;I [A]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;E [V vs Ref]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Data given as input&#39;</span><span class="p">)</span>
+		<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span> <span class="s1">&#39;/data.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+		<span class="c1"># plot 2: fit_linear</span>
+		<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;observed&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;fit&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;i [A/m$^2$]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;E [V vs Ref]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;fit&#39;</span><span class="p">)</span>
+		<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span> <span class="s1">&#39;/fit_linear.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+		<span class="c1"># plot 3: fit_semilogarithmic</span>
+		<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">)),</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;observed&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fit_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;fit&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;|i| [A/m$^2$]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;E [V vs Ref]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;fit&#39;</span><span class="p">)</span>
+		<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span> <span class="s1">&#39;/fit_semilogarithmic.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+		<span class="c1"># plot 4: results_overview</span>
+		<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">)),</span> <span class="s1">&#39;-k&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;polarization curve&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,((</span><span class="bp">self</span><span class="o">.</span><span class="n">I_corr</span><span class="p">)</span><span class="o">-</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">E_corr</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">))</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">b_a</span><span class="p">),</span> <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Tafel slope&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_c</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,((</span><span class="bp">self</span><span class="o">.</span><span class="n">I_corr</span><span class="p">)</span><span class="o">-</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">E_corr</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">))</span><span class="o">/-</span><span class="bp">self</span><span class="o">.</span><span class="n">b_c</span><span class="p">),</span> <span class="s1">&#39;-b&#39;</span><span class="p">)</span> <span class="c1">#, label = &#39;cathodic Tafel slope&#39;)</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">i_L</span><span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">,([</span><span class="bp">self</span><span class="o">.</span><span class="n">i_L</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">)),</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;limiting current density&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;log10|i| [A/m$^2$]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;E [V vs Ref]&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Overview results&#39;</span><span class="p">)</span>
+		<span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_folder</span> <span class="o">+</span> <span class="s1">&#39;/results_overview.jpeg&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;jpeg&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+		<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span></div>
+		
+
+
+	<span class="c1">############################## Data functions ################################</span>
+	<span class="c1">##############################################################################</span>
+
+	<span class="c1"># function to obtain the weight distribution for the &#39;mixed activation-diffusion control fit&#39;</span>
+	<span class="k">def</span> <span class="nf">apply_weight_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,</span> <span class="n">w_ac</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+		<span class="n">E_sigma</span><span class="p">,</span> <span class="n">I_sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">windowcut</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,[</span><span class="o">-</span><span class="n">w_ac</span><span class="p">,</span><span class="n">w_ac</span><span class="p">])</span>
+		<span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)):</span>
+			<span class="k">if</span> <span class="p">(</span><span class="o">-</span><span class="n">w_ac</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">E_corr</span><span class="p">))</span> <span class="ow">and</span> <span class="p">((</span><span class="n">E</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">E_corr</span><span class="p">)</span><span class="o">&lt;=</span> <span class="n">w_ac</span><span class="p">):</span>
+				<span class="n">sigma</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span><span class="o">-</span><span class="n">W</span><span class="p">)</span><span class="o">/</span><span class="n">W</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">E_sigma</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">E</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">E_sigma</span><span class="p">))</span>
+
+		<span class="k">return</span> <span class="n">sigma</span>
+
+	<span class="c1"># function to correct the data for the voltage drop (IR correction)</span>
+	<span class="k">def</span> <span class="nf">ir_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">R</span><span class="p">):</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">R</span>
+
+	<span class="c1"># function to obtain the corrosion potential E_corr</span>
+	<span class="k">def</span> <span class="nf">find_Ecorr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">min_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="p">))</span> 
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">[</span><span class="n">min_index</span><span class="p">]</span>
+
+	<span class="c1"># function to select the data within a certain window</span>
+	<span class="k">def</span> <span class="nf">windowcut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,</span> <span class="n">window</span><span class="p">):</span>
+		<span class="n">E_cut</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="n">I_cut</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)):</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">E_corr</span><span class="p">))</span> <span class="ow">and</span> <span class="p">((</span><span class="n">E</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">E_corr</span><span class="p">)</span><span class="o">&lt;=</span> <span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+				<span class="n">E_cut</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+				<span class="n">I_cut</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+		<span class="k">return</span> <span class="n">E_cut</span><span class="p">,</span> <span class="n">I_cut</span>
+
+	<span class="c1"># function to compute the exchange current densities</span>
+	<span class="k">def</span> <span class="nf">compute_exchcurrent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">I_corr</span><span class="p">,</span> <span class="n">E_corr</span><span class="p">,</span> <span class="n">b_a</span><span class="p">,</span> <span class="n">E_rev_an</span><span class="p">,</span> <span class="n">b_c</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">E_rev_cath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+	    <span class="k">if</span> <span class="n">b_c</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+	    	<span class="n">io</span> <span class="o">=</span> <span class="n">I_corr</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">b_a</span><span class="o">*</span><span class="p">(</span><span class="n">E_rev_an</span><span class="o">-</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># 0 corresponding to the computation of I_corr</span>
+	    	<span class="k">return</span> <span class="n">io</span>
+	    <span class="k">else</span><span class="p">:</span>
+	    	<span class="n">io_an</span> <span class="o">=</span> <span class="n">I_corr</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">b_a</span><span class="o">*</span><span class="p">(</span><span class="n">E_rev_an</span><span class="o">-</span><span class="n">E_corr</span><span class="p">)</span>
+	    	<span class="n">io_cath</span> <span class="o">=</span> <span class="n">I_corr</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">b_c</span><span class="o">*</span><span class="p">(</span><span class="n">E_rev_cath</span><span class="o">-</span><span class="n">E_corr</span><span class="p">)</span>
+	    <span class="k">return</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
+
+	<span class="c1"># function to obtain the change in respect to the mean of the last 10 points</span>
+	<span class="k">def</span> <span class="nf">get_fluc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+		<span class="n">y_fluc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+		<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">j</span><span class="o">&lt;</span><span class="mi">9</span><span class="p">:</span>
+				<span class="n">y_fluc</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="n">j</span><span class="p">]))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">y_fluc</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">9</span><span class="p">:</span><span class="n">j</span><span class="p">]))</span>
+		<span class="k">return</span> <span class="n">y_fluc</span>
+				
+	<span class="c1"># function to truncate a colormap</span>
+	<span class="k">def</span> <span class="nf">truncate_colormap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">minval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">maxval</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+		<span class="n">new_cmap</span> <span class="o">=</span> <span class="n">colours</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;trunc(</span><span class="si">{n}</span><span class="s1">,</span><span class="si">{a:.2f}</span><span class="s1">,</span><span class="si">{b:.2f}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">cmap</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">minval</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">maxval</span><span class="p">),</span><span class="n">cmap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+		<span class="k">return</span> <span class="n">new_cmap</span></div>
+
+	
+
+	
+	
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Meeke van Ede.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
