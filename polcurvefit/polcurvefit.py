@@ -64,29 +64,18 @@ class PolCurveFit:
 		:type E_corr: float
 
 		:param obtain_io: If True, the (cathodic OR anodic) exchange current density will be determined from the obtained Tafel slope and E_rev. (Default: False)
-		:type: bool 
+		:type obtain_io: bool
 
 		:param E_rev: The reversible potential [V vs ref] of the anodic OR cathodic reaction of the Tafel region that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev: float
 
-		:return fit_results: the fit to the data [current densities (N-array), potentials (N-array)]
-		:rtype fit_results: 2xN array
-
-		:return E_corr: the corrosion potential [V vs ref]
-		:rtype E_corr: float
-
-		:return I_corr: the corrosion rate (if the corrosion potential is given as input) [A/surface area]
-		:rtype I_corr: float
-
-		:return b: the obtained Tafel slope [V]
-		:rtype b: float
-
-		:return RMSE: the root mean squared error of the fit
-		:rtype RMSE: float
-
-		:return io: Only returned, if obtain_io is True. The exchange current density [A/surface area].
-		:rtype io: float
-
+		:returns: 
+			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]
+			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]
+			- I_corr (:py:class:`float`) - the corrosion rate (if the corrosion potential is given as input) [A/surface area]
+			- b (:py:class:`float`) - the obtained Tafel slope [V]
+			- RMSE (:py:class:`float`) - the root mean squared error of the fit
+			- io (:py:class:`float`) - Only returned, if obtain_io is True. The exchange current density [A/surface area].
 		"""
 
 		# select data in specified window
