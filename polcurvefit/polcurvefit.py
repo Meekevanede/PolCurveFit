@@ -554,7 +554,7 @@ class PolCurveFit:
 		fig = plt.figure(2)
 		plt.plot(self.E,self.i, label = 'observed')
 		plt.plot(self.fit_results[1],self.fit_results[0], label = 'fit')
-		plt.ylabel(r'|i| [A/m$^2$]')
+		plt.ylabel(r'i [A/m$^2$]')
 		plt.xlabel('E [V vs Ref]')
 		plt.legend(loc='upper left')
 		plt.title('fit')

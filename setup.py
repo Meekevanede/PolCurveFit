@@ -32,5 +32,6 @@ setup(
     ],
     packages=["polcurvefit"],
     include_package_data=True,
-    install_requires=["numpy","scipy","matplotlib","pandas"]
+    package_data={'': ['data/*.txt']},
+    install_requires=["numpy","scipy","matplotlib","pandas"] 
 )
