@@ -78,7 +78,7 @@
 <dl class="class">
 <dt id="polcurvefit.PolCurveFit">
 <em class="property">class </em><code class="descclassname">polcurvefit.</code><code class="descname">PolCurveFit</code><span class="sig-paren">(</span><em>E</em>, <em>I</em>, <em>R=0.0</em>, <em>sample_surface=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit" title="Permalink to this definition">¶</a></dt>
-<dd><p>PolCurveFit is a python library that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
+<dd><p>PolCurveFit is a python class that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
 Tafel slopes, corrosion current density and exchange current densities. The data can be fitted with 3 techniques: Tafel extrapolation (linear fit), 
 ‘Activation control fit’ &amp; ‘mixed activation-diffusion control fit’.</p>
 <dl class="field-list simple">
@@ -93,7 +93,7 @@ Tafel slopes, corrosion current density and exchange current densities. The data
 </dl>
 <dl class="method">
 <dt id="polcurvefit.PolCurveFit.active_pol_fit">
-<code class="descname">active_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.01</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.active_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.active_pol_fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">active_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.00788860117618554</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.active_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.active_pol_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fitting of a theoretical description, representative for the anodic and cathodic activation controlled currents around the Corrosion potential (OCP).
 This option is suitable for data of which the anodic and cathodic branches are solely under activation control.</p>
 <dl class="field-list simple">
@@ -101,61 +101,22 @@ This option is suitable for data of which the anodic and cathodic branches are s
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>window</strong> (<em>2-length sequence</em>) – Lower and upper bounds of the data to be fitted, relative to the corrosion potential [min value, max value], units [V vs E_corr]</p></li>
 <li><p><strong>i_corr_guess</strong> (<em>float</em>) – First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).</p></li>
-<li><p><strong>obtain_io</strong> – If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</p></li>
+<li><p><strong>obtain_io</strong> (<em>bool</em>) – If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</p></li>
 <li><p><strong>E_rev_an</strong> (<em>float</em>) – The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
 <li><p><strong>E_rev_cath</strong> (<em>float</em>) – The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Type</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-<dt class="field-odd">Return fit_results</dt>
-<dd class="field-odd"><p>the fit to the data [current densities (N-array), potentials (N-array)]</p>
-</dd>
-<dt class="field-even">Rtype fit_results</dt>
-<dd class="field-even"><p>2xN array</p>
-</dd>
-<dt class="field-odd">Return E_corr</dt>
-<dd class="field-odd"><p>the corrosion potential [V vs ref]</p>
-</dd>
-<dt class="field-even">Rtype E_corr</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return I_corr</dt>
-<dd class="field-odd"><p>the corrosion rate (if the corrosion potential is given as input) [A/surface area]</p>
-</dd>
-<dt class="field-even">Rtype I_corr</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return b_an</dt>
-<dd class="field-odd"><p>the obtained anodic Tafel slope [V]</p>
-</dd>
-<dt class="field-even">Rtype b_an</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return b_cath</dt>
-<dd class="field-odd"><p>the obtained cathodic Tafel slope [V]</p>
-</dd>
-<dt class="field-even">Rtype b_cath</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return RMSE</dt>
-<dd class="field-odd"><p>the root mean squared error of the fit</p>
-</dd>
-<dt class="field-even">Rtype RMSE</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return io_an</dt>
-<dd class="field-odd"><p>Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</p>
-</dd>
-<dt class="field-even">Rtype io_an</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return io_cath</dt>
-<dd class="field-odd"><p>Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</p>
-</dd>
-<dt class="field-even">Rtype io_cath</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-even">Return tuple Results</dt>
+<dd class="field-even"><ul class="simple">
+<li><p>fit_results (<code class="xref py py-class docutils literal notranslate"><span class="pre">2xN</span> <span class="pre">array</span></code>) - the fit to the data [current densities (N-array), potentials (N-array)]</p></li>
+<li><p>E_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion potential [V vs ref]</p></li>
+<li><p>I_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion rate  [A/surface area]</p></li>
+<li><p>b_an (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the obtained anodic Tafel slope [V]</p></li>
+<li><p>b_cath (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the obtained cathodic Tafel slope [V]</p></li>
+<li><p>RMSE (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the root mean squared error of the fit</p></li>
+<li><p>io_an (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</p></li>
+<li><p>io_cath (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -191,7 +152,7 @@ the returned I_corr relects the corrosion rate.</p>
 
 <dl class="method">
 <dt id="polcurvefit.PolCurveFit.mixed_pol_fit">
-<code class="descname">mixed_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.01</em>, <em>i_L_guess=10</em>, <em>fix_i_L=False</em>, <em>apply_weight_distribution=False</em>, <em>w_ac=0.04</em>, <em>W=75</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.mixed_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.mixed_pol_fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mixed_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.00788860117618554</em>, <em>i_L_guess=12.676518658578456</em>, <em>fix_i_L=False</em>, <em>apply_weight_distribution=False</em>, <em>w_ac=0.04</em>, <em>W=75</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.mixed_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.mixed_pol_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fitting of a theoretical description, representative for the anodic activation controlled currents and cathodic mixed activation-diffusion controlled currents.
 This option is suitable for data of which the anodic is under activation control and the cathodic branche are under mixed activation-diffusion control.
 Describe the weight distribution !!!!!!</p>
@@ -205,73 +166,24 @@ Describe the weight distribution !!!!!!</p>
 <li><p><strong>apply_weight_distribution</strong> (<em>bool</em>) – If True, the data within w_ac are given a certain percentage, W, of the overall weight. The application of this weight distribution leads generally to more consistent and accurate results.</p></li>
 <li><p><strong>w_ac</strong> (<em>float</em>) – determines the window activation control: the window around corrosion potential (E_corr) [-w_ac,+w_ac [V vs E_corr]], in which the data are given a certain weight percentage, W, of the overall weight of the data.</p></li>
 <li><p><strong>W</strong> (<em>float</em>) – The percentage of the weight assigned to the data within +/-w_ac around the corrosion potential.</p></li>
-<li><p><strong>obtain_io</strong> – If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</p></li>
+<li><p><strong>obtain_io</strong> (<em>bool</em>) – If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an &amp; E_rev_cath. (Default: False)</p></li>
 <li><p><strong>E_rev_an</strong> (<em>float</em>) – The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
 <li><p><strong>E_rev_cath</strong> (<em>float</em>) – The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Type</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-<dt class="field-odd">Return fit_results</dt>
-<dd class="field-odd"><p>the fit to the data [current densities (N-array), potentials (N-array)]</p>
-</dd>
-<dt class="field-even">Rtype fit_results</dt>
-<dd class="field-even"><p>2xN array</p>
-</dd>
-<dt class="field-odd">Return E_corr</dt>
-<dd class="field-odd"><p>the corrosion potential [V vs ref]</p>
-</dd>
-<dt class="field-even">Rtype E_corr</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return I_corr</dt>
-<dd class="field-odd"><p>the corrosion rate (if the corrosion potential is given as input) [A/surface area]</p>
-</dd>
-<dt class="field-even">Rtype I_corr</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return b_an</dt>
-<dd class="field-odd"><p>the obtained anodic Tafel slope [V]</p>
-</dd>
-<dt class="field-even">Rtype b_an</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return b_cath</dt>
-<dd class="field-odd"><p>the obtained cathodic Tafel slope [V]</p>
-</dd>
-<dt class="field-even">Rtype b_cath</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return i_L</dt>
-<dd class="field-odd"><p>the obtained limiting current density [A/surface area]</p>
-</dd>
-<dt class="field-even">Rtype i_L</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return RMSE</dt>
-<dd class="field-odd"><p>the root mean squared error of the fit</p>
-</dd>
-<dt class="field-even">Rtype RMSE</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return gamma</dt>
-<dd class="field-odd"><p>The obtained gamma [-]</p>
-</dd>
-<dt class="field-even">Rtype gamma</dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">Return io_an</dt>
-<dd class="field-odd"><p>Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</p>
-</dd>
-<dt class="field-even">Rtype io_an</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Return io_cath</dt>
-<dd class="field-odd"><p>Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</p>
-</dd>
-<dt class="field-even">Rtype io_cath</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-even">Return tuple Results</dt>
+<dd class="field-even"><ul class="simple">
+<li><p>fit_results (<code class="xref py py-class docutils literal notranslate"><span class="pre">2xN</span> <span class="pre">array</span></code>) - the fit to the data [current densities (N-array), potentials (N-array)]</p></li>
+<li><p>E_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion potential [V vs ref]</p></li>
+<li><p>I_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion rate  [A/surface area]</p></li>
+<li><p>b_an (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the obtained anodic Tafel slope [V]</p></li>
+<li><p>b_cath (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the obtained cathodic Tafel slope [V]</p></li>
+<li><p>i_L (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the obtained limiting current density [A/surface area]</p></li>
+<li><p>RMSE (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the root mean squared error of the fit</p></li>
+<li><p>gamma (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) - Curvature defining constant (see Documentation)</p></li>
+<li><p>io_an (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].</p></li>
+<li><p>io_cath (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

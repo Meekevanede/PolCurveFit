@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 import matplotlib as mpl
 import matplotlib.colors as colours
+import warnings
 
 class PolCurveFit:
 	
 	"""
-	PolCurveFit is a python library that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
+	PolCurveFit is a python class that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
 	Tafel slopes, corrosion current density and exchange current densities. The data can be fitted with 3 techniques: Tafel extrapolation (linear fit), 
 	'Activation control fit' & 'mixed activation-diffusion control fit'.
 
@@ -31,6 +32,19 @@ class PolCurveFit:
 	"""
 
 	def __init__(self,E,I, R = 0.0, sample_surface = 1.0):
+
+		# check shape
+		if len(np.array(E).shape) != 1:
+			raise ValueError("The input potential should be a 1 dimensional sequence")
+		if len(np.array(I).shape) != 1:
+			raise ValueError("The input current should be a 1 dimensional sequence")
+
+		# if input is a list, check if it contains only numbers
+		if all(isinstance(e, (int, float)) for e in E) == False:
+			raise ValueError("non-real numbers in potential input")
+		if all(isinstance(e, (int, float)) for e in I) == False:
+			raise ValueError("non-real numbers in current input")
+
 		self.E = E
 		self.I = I
 
@@ -112,7 +126,7 @@ class PolCurveFit:
 
 ############################## Activation control fit ########################
 ##############################################################################
-	def active_pol_fit(self,window, i_corr_guess = 10**-2, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
+	def active_pol_fit(self,window, i_corr_guess = 10**-2.103, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
 		"""
 		Fitting of a theoretical description, representative for the anodic and cathodic activation controlled currents around the Corrosion potential (OCP).
 		This option is suitable for data of which the anodic and cathodic branches are solely under activation control.
@@ -124,38 +138,28 @@ class PolCurveFit:
 		:type i_corr_guess: float
 
 		:param obtain_io: If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an & E_rev_cath. (Default: False)
-		:type: bool 
+		:type obtain_io: bool 
 
 		:param E_rev_an: The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev_an: float
 
 		:param E_rev_cath: The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev_cath: float
-
-		:return fit_results: the fit to the data [current densities (N-array), potentials (N-array)]
-		:rtype fit_results: 2xN array
-
-		:return E_corr: the corrosion potential [V vs ref]
-		:rtype E_corr: float
-
-		:return I_corr: the corrosion rate (if the corrosion potential is given as input) [A/surface area]
-		:rtype I_corr: float
-
-		:return b_an: the obtained anodic Tafel slope [V]
-		:rtype b_an: float
-
-		:return b_cath: the obtained cathodic Tafel slope [V]
-		:rtype b_cath: float
-
-		:return RMSE: the root mean squared error of the fit
-		:rtype RMSE: float
-
-		:return io_an: Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].
-		:rtype io_an: float
 		
-		:return io_cath: Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].
-		:rtype io_cath: float
+		:return tuple Results: 
+			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]
+			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]
+			- I_corr (:py:class:`float`) - the corrosion rate  [A/surface area]
+			- b_an (:py:class:`float`) - the obtained anodic Tafel slope [V]
+			- b_cath (:py:class:`float`) - the obtained cathodic Tafel slope [V]
+			- RMSE (:py:class:`float`) - the root mean squared error of the fit
+			- io_an (:py:class:`float`) - Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].
+			- io_cath (:py:class:`float`) - Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].
+			 
 		"""
+		# check input 
+		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()) and i_corr_guess!= 10**-2.103:
+			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
 
 		# obtain E_corr
 		E_corr = self.find_Ecorr()
@@ -189,7 +193,7 @@ class PolCurveFit:
 
 ############################## Mixed activation-difussion control fit #############
 ###################################################################################
-	def mixed_pol_fit(self,window, i_corr_guess = 10**-2, i_L_guess = 10**1, fix_i_L = False, apply_weight_distribution = False, w_ac = 0.04, W = 75, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
+	def mixed_pol_fit(self,window, i_corr_guess = 10**-2.103, i_L_guess = 10**1.103, fix_i_L = False, apply_weight_distribution = False, w_ac = 0.04, W = 75, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
 		
 		"""
 		Fitting of a theoretical description, representative for the anodic activation controlled currents and cathodic mixed activation-diffusion controlled currents.
@@ -218,7 +222,7 @@ class PolCurveFit:
 		:type W: float
 
 		:param obtain_io: If True, the exchange current densities will be determined from the obtained Tafel slope and E_rev_an & E_rev_cath. (Default: False)
-		:type: bool 
+		:type obtain_io: bool 
 
 		:param E_rev_an: The reversible potential [V vs ref] of the anodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev_an: float
@@ -226,36 +230,25 @@ class PolCurveFit:
 		:param E_rev_cath: The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev_cath: float
 
-		:return fit_results: the fit to the data [current densities (N-array), potentials (N-array)]
-		:rtype fit_results: 2xN array
+		:return tuple Results: 
+			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]
+			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]
+			- I_corr (:py:class:`float`) - the corrosion rate  [A/surface area]
+			- b_an (:py:class:`float`) - the obtained anodic Tafel slope [V]
+			- b_cath (:py:class:`float`) - the obtained cathodic Tafel slope [V]
+			- i_L (:py:class:`float`) - the obtained limiting current density [A/surface area]
+			- RMSE (:py:class:`float`) - the root mean squared error of the fit
+			- gamma (:py:class:`int`) - Curvature defining constant (see Documentation)
+			- io_an (:py:class:`float`) - Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].
+			- io_cath (:py:class:`float`) - Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].
 
-		:return E_corr: the corrosion potential [V vs ref]
-		:rtype E_corr: float
-
-		:return I_corr: the corrosion rate (if the corrosion potential is given as input) [A/surface area]
-		:rtype I_corr: float
-
-		:return b_an: the obtained anodic Tafel slope [V]
-		:rtype b_an: float
-
-		:return b_cath: the obtained cathodic Tafel slope [V]
-		:rtype b_cath: float
-
-		:return i_L: the obtained limiting current density [A/surface area]
-		:rtype i_L: float
-
-		:return RMSE: the root mean squared error of the fit
-		:rtype RMSE: float
-
-		:return gamma: The obtained gamma [-]
-		:rtype gamma: int
-
-		:return io_an: Only returned, if obtain_io is True. The anodic exchange current density [A/surface area].
-		:rtype io_an: float
-		
-		:return io_cath: Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].
-		:rtype io_cath: float
 		"""
+		# check input 
+		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()) and i_corr_guess!= 10**-2.103:
+			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
+		if (i_L_guess>self.i.max() or i_L_guess<self.i.min()) and i_L_guess!= 10**1.103:
+			warnings.warn("Specified i_L_guess does not lie within the range of the current density")
+
 
 		# obtain E_corr
 		E_corr = self.find_Ecorr()
@@ -349,10 +342,10 @@ class PolCurveFit:
 
 		# Initializing panda data frame
 		df = pd.DataFrame(data={'b_c_best': [],
-							'i_L_best': [],
-	                       'window_cat':[], 
-	                      'w_ac': [],
-	                      'importance':[]})
+								'i_L_best': [],
+	                       		'window_cat':[], 
+	                      		'w_ac': [],
+	                      		'importance':[]})
 
 		# Obtaining fitting results - parameter search
 		for window_cat in window_cat_:
@@ -360,10 +353,14 @@ class PolCurveFit:
 				for importance in importance_:
 					if -w_ac>window_cat:
 						if importance == 0:
-							fitted_curve, E_corr, I_corr_best, b_a_best, b_c_best, i_L_best, obj_func, gamma = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = False)
+							temp_result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = False)
 						else:
-							fitted_curve, E_corr, I_corr_best, b_a_best, b_c_best, i_L_best, obj_func, gamma = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = True, w_ac = w_ac, W = importance)
-						df_temp = pd.DataFrame(data={'b_c_best': [b_c_best], 'i_L_best':[i_L_best],'window_cat':[window_cat], 'w_ac': [w_ac],'importance':[importance]})
+							temp_result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = True, w_ac = w_ac, W = importance)
+						df_temp = pd.DataFrame(data={'b_c_best': [temp_result[4]], 
+							                         'i_L_best':[temp_result[5]],
+							                         'window_cat':[window_cat], 
+							                         'w_ac': [w_ac],
+							                         'importance':[importance]})
 						df = df.append(df_temp, ignore_index=True)
 
 
@@ -379,135 +376,29 @@ class PolCurveFit:
 
 		except:
 			print('Output folder exists - plots will be overwritten')
-
-		# defining colorscale for plot 4 & 5
-		colors = plt.cm.Reds(np.linspace(0.2, 1.0, len(w_ac_)))
 		
 		# plot 1: effect_importance
 		for w_ac in w_ac_:
-			plt.close('all')
-			fig,ax = plt.subplots(figsize=(10, 5))
-			for importance in importance_:				
-				df_select = df.loc[df['w_ac'] == w_ac]
-				df_select = df_select.loc[df_select['importance']== importance]
-				x = df_select['window_cat'].to_numpy()
-				y = df_select['b_c_best'].to_numpy()
-				
-				if importance == 0:
-					plt.plot(x,y,'-k', label = 'not weighted')
-				else:
-					plt.plot(x,y, label = 'W = '+ str(importance) +' %')
-
-			plt.ylabel(r'$\beta_{cath}$ [V/dec]')
-			plt.xlabel('cathodic window [V from OCP]')
-			plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-			plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
-			plt.tight_layout()
-			fig.savefig(output_folder +'/effect_importance/wac=' +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
-
+			self.plot_effect_W(df,w_ac,importance_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_importance/wac=',fluctuation=False)
 
 		# plot 2: effect_importance_fluctuation
 		for w_ac in w_ac_:
-			plt.close('all')
-			fig,ax = plt.subplots(figsize=(10, 5))
-			for importance in importance_:				
-				df_select = df.loc[df['w_ac'] == w_ac]
-				df_select = df_select.loc[df_select['importance']== importance]
-				x = df_select['window_cat'].to_numpy()
-				y = df_select['b_c_best'].to_numpy()
-
-				y_fluc = self.get_fluc(y)
-				
-				if importance == 0:
-					plt.plot(x,y_fluc, '-k', label = 'not weighted')
-				else:
-					plt.plot(x,y_fluc, label = 'W = '+ str(importance) +' %')
-
-			plt.ylabel(r'relative change of $\beta_{cath}$ [V/dec]')
-			plt.xlabel('cathodic window [V from OCP]')
-			plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-			plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
-			plt.tight_layout()
-			fig.savefig(output_folder +'/effect_importance_fluctuation/wac=' +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
+			self.plot_effect_W(df,w_ac,importance_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder + '/effect_importance_fluctuation/wac=',fluctuation=True)
 
 		# plot 3: effect_importance_il
 		for w_ac in w_ac_:
-			plt.close('all')
-			fig,ax = plt.subplots(figsize=(10, 5))
-			for importance in importance_:				
-				df_select = df.loc[df['w_ac'] == w_ac]
-				df_select = df_select.loc[df_select['importance']== importance]
-				x = df_select['window_cat'].to_numpy()
-				y = df_select['i_L_best'].to_numpy()
-				
-				if importance == 0:
-					plt.plot(x,10**y,'-k', label = 'not weighted')
-				else:
-					plt.plot(x,10**y, label = 'W = '+ str(importance) +' %')
-
-			plt.yscale('log')
-			plt.ylabel(r'$i_{L}$ [A/m$^2$]')
-			plt.xlabel('cathodic window [V from OCP]')
-			plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-			plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
-			plt.tight_layout()
-			fig.savefig(output_folder +'/effect_importance_il/wac=' +'%.2f' % w_ac +'.jpeg', format='jpeg', dpi=1000)
+			self.plot_effect_W(df,w_ac,importance_,'i_L_best',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_importance_il/wac=',fluctuation=False)
 
 		# plot 4: effect_window_act_control
 		for importance in importance_:
 			if importance != 0:
-				plt.close('all')
-				fig,ax = plt.subplots(figsize=(10, 6))
-				i = 0
-				for w_ac in w_ac_:
-					df_select = df.loc[df['w_ac'] == w_ac]	
-					df_select = df_select.loc[df_select['importance'] == importance]
-					x = df_select['window_cat'].to_numpy()
-					y = df_select['b_c_best'].to_numpy()
-										
-					plt.plot(x,y, color=colors[i], label = str(w_ac))
-					i+=1
-
-				df_select_notweighted = df.loc[(df['importance']==0) & (df['w_ac']==0.01)]
-				plt.plot(df_select_notweighted['window_cat'].to_numpy(),df_select_notweighted['b_c_best'].to_numpy(), '--k')
-				cmap=self.truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
-				norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
-				plt.ylabel(r'$\beta_{cath}$ [V/dec]')
-				plt.ylim([0,0.5])
-				plt.xlabel('cathodic window [V from OCP]')
-				plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
-				plt.title('Weight (W) = ' + str(importance)+'%')
-				fig.savefig(output_folder+'/effect_window_act_control/W='+str(importance)+'.jpeg', format='jpeg', dpi=1000)
-
+				self.plot_effect_wac(df,importance,w_ac_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control/W=',fluctuation=False)
+			
 		# plot 5: effect_window_act_control_fluctuation
 		for importance in importance_:
 			if importance != 0:
-				plt.close('all')
-				fig,ax = plt.subplots(figsize=(10, 6))
-				i = 0
-				for w_ac in w_ac_:
-					df_select = df.loc[df['w_ac'] == w_ac]	
-					df_select = df_select.loc[df_select['importance'] == importance]
-					x = df_select['window_cat'].to_numpy()
-					y = df_select['b_c_best'].to_numpy()
-					
-					y_fluc = self.get_fluc(y)
-					plt.plot(x,y_fluc, color=colors[i], label = str(w_ac))
-					i+=1
-				
-				df_select_notweighted = df.loc[(df['importance']==0) & (df['w_ac']==0.01)]
-				y = df_select_notweighted['b_c_best'].to_numpy()
-				y_fluc = self.get_fluc(y)
-				plt.plot(df_select_notweighted['window_cat'].to_numpy(),y_fluc, '--k')
-				cmap=self.truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
-				norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
-				plt.ylabel(r'relative change of $\beta_{cath}$ [V/dec]')
-				plt.xlabel('cathodic window [V from OCP]')
-				plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
-				plt.title('weight (W) = ' + str(importance)+'%')
-				fig.savefig(output_folder+'/effect_window_act_control_fluctuation/W='+str(importance)+'.jpeg', format='jpeg', dpi=1000)
-
-
+				self.plot_effect_wac(df,importance,w_ac_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control_fluctuation/W=',fluctuation=True)
+			
 ############################## Plotting ######################################
 ##############################################################################
 
@@ -633,6 +524,67 @@ class PolCurveFit:
 	def truncate_colormap(self, cmap, minval=0.0, maxval=1.0, n=100):
 		new_cmap = colours.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),cmap(np.linspace(minval, maxval, n)))
 		return new_cmap
+
+
+	# function for plotting, dependency of W
+	def plot_effect_W(self,df,w_ac,importance_,param,ylabel,output_folder,fluctuation=False):
+		plt.close('all')
+		fig,ax = plt.subplots(figsize=(10, 5))
+		for importance in importance_:				
+			df_select = df.loc[df['w_ac'] == w_ac]
+			df_select = df_select.loc[df_select['importance']== importance]
+			x = df_select['window_cat'].to_numpy()
+			y = df_select[param].to_numpy()
+
+			if fluctuation:	
+				y = self.get_fluc(y)
+
+			if importance == 0:
+				plt.plot(x,y,'-k', label = 'not weighted')
+			else:
+				plt.plot(x,y, label = 'W = '+ str(importance) +' %')
+
+			if param == 'i_L_best':
+				plt.yscale('log')
+		plt.ylabel(ylabel)
+		plt.xlabel('cathodic window [V from OCP]')
+		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+		plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
+		plt.tight_layout()
+		fig.savefig(output_folder +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
+
+	# function for plotting, dependency on w_ac
+	def plot_effect_wac(self,df,importance,w_ac_,param,ylabel,output_folder,fluctuation=False):
+		# defining colorscale 
+		colors = plt.cm.Reds(np.linspace(0.2, 1.0, len(w_ac_)))
+		plt.close('all')
+		fig,ax = plt.subplots(figsize=(10, 6))
+		i = 0
+		for w_ac in w_ac_:
+			df_select = df.loc[df['w_ac'] == w_ac]	
+			df_select = df_select.loc[df_select['importance'] == importance]
+			x = df_select['window_cat'].to_numpy()
+			y = df_select[param].to_numpy()
+			
+			if fluctuation:	
+				y = self.get_fluc(y)
+
+			plt.plot(x,y, color=colors[i], label = str(w_ac))
+			i+=1
+
+		df_select_notweighted = df.loc[(df['importance']==0) & (df['w_ac']==0.01)]
+		if fluctuation:
+			plt.plot(df_select_notweighted['window_cat'].to_numpy(),self.get_fluc(df_select_notweighted[param].to_numpy()), '--k')
+		else:
+			plt.plot(df_select_notweighted['window_cat'].to_numpy(),df_select_notweighted[param].to_numpy(), '--k')
+		cmap=self.truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
+		norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
+		plt.ylabel(ylabel)
+		plt.xlabel('cathodic window [V from OCP]')
+		plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
+		plt.title('Weight (W) = ' + str(importance)+'%')
+		fig.savefig(output_folder+str(importance)+'.jpeg', format='jpeg', dpi=1000)
+
 
 	
 
