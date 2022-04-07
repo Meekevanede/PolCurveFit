@@ -43,8 +43,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example1.html">Example 1</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example2.html">Example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example1.html">Example 1: Tafel extrapolation (Linear fit)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example2.html">Example 2: Activation control fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/examples/example3.html">Example 3: Mixed activation-diffusion control fit</a></li>
 </ul>
 
         </div>
@@ -157,7 +158,7 @@
 <span class="sd">		:param E_rev: The reversible potential [V vs ref] of the anodic OR cathodic reaction of the Tafel region that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
 <span class="sd">		:type E_rev: float</span>
 
-<span class="sd">		:returns: </span>
+<span class="sd">		:return tuple Results:  </span>
 <span class="sd">			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]</span>
 <span class="sd">			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]</span>
 <span class="sd">			- I_corr (:py:class:`float`) - the corrosion rate (if the corrosion potential is given as input) [A/surface area]</span>
@@ -260,9 +261,9 @@
 
 		<span class="k">if</span> <span class="n">obtain_io</span><span class="p">:</span>
 			<span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_exchcurrent</span><span class="p">(</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">E_corr</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">E_rev_an</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">E_rev_cath</span><span class="p">)</span>
-			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">RMSE</span><span class="p">,</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">RMSE</span><span class="p">,</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
 		<span class="k">else</span><span class="p">:</span>
-			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">RMSE</span></div>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">RMSE</span></div>
 
 
 <span class="c1">############################## Mixed activation-difussion control fit #############</span>
@@ -304,7 +305,7 @@
 <span class="sd">		:param E_rev_cath: The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</span>
 <span class="sd">		:type E_rev_cath: float</span>
 
-<span class="sd">		:return tuple Results: </span>
+<span class="sd">		:return tulple Results: </span>
 <span class="sd">			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]</span>
 <span class="sd">			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]</span>
 <span class="sd">			- I_corr (:py:class:`float`) - the corrosion rate  [A/surface area]</span>
@@ -322,7 +323,6 @@
 			<span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Specified i_corr_guess does not lie within the range of the current density&quot;</span><span class="p">)</span>
 		<span class="k">if</span> <span class="p">(</span><span class="n">i_L_guess</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="ow">or</span> <span class="n">i_L_guess</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="ow">and</span> <span class="n">i_L_guess</span><span class="o">!=</span> <span class="mi">10</span><span class="o">**</span><span class="mf">1.103</span><span class="p">:</span>
 			<span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Specified i_L_guess does not lie within the range of the current density&quot;</span><span class="p">)</span>
-
 
 		<span class="c1"># obtain E_corr</span>
 		<span class="n">E_corr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_Ecorr</span><span class="p">()</span>
@@ -347,7 +347,7 @@
 			<span class="n">obj_func</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">I_cut</span><span class="o">-</span><span class="n">d_final</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
 
 		<span class="k">else</span><span class="p">:</span>
-			<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">I_cut</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_corr_guess</span><span class="p">),</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="mf">0.100</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_L_guess</span><span class="p">),</span><span class="mi">3</span> <span class="p">],</span> <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)))</span> 
+			<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">I_cut</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_corr_guess</span><span class="p">),</span> <span class="mf">0.0600</span><span class="p">,</span> <span class="mf">0.100</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">i_L_guess</span><span class="p">),</span><span class="mi">3</span> <span class="p">],</span> <span class="n">bounds</span><span class="o">=</span><span class="p">((</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">)))</span> 
 			<span class="n">d_final</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
 			<span class="n">d_final</span><span class="p">[</span><span class="n">d_final</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1E-8</span>  <span class="c1"># to get rid of zeros</span>
 			<span class="n">obj_func</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">I_cut</span><span class="o">-</span><span class="n">d_final</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
@@ -362,9 +362,9 @@
 
 		<span class="k">if</span> <span class="n">obtain_io</span><span class="p">:</span>
 			<span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_exchcurrent</span><span class="p">(</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">E_corr</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">E_rev_an</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">E_rev_cath</span><span class="p">)</span>
-			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">io_an</span><span class="p">,</span> <span class="n">io_cath</span>
 		<span class="k">else</span><span class="p">:</span>
-			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></div>
+			<span class="k">return</span> <span class="p">[</span><span class="n">d_final</span><span class="p">,</span> <span class="n">E_cut</span><span class="p">],</span> <span class="n">E_corr</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="o">**</span><span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">obj_func</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></div>
 	
 
 <span class="c1">########################### Sensitivity analysis #############################</span>
@@ -375,18 +375,9 @@
 		<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Sensitivity analysis of the &#39;mixed activation-diffusion control fit&#39; to the set parameters for the weight distribution.</span>
 <span class="sd">		It returns 5 plots, showing the effect of the importance &amp; w_acon on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).</span>
-<span class="sd">		The 5 kind of plots are safed in different folders in the output_folder:</span>
+<span class="sd">		The 5 plots are safed in different folders in the output_folder</span>
 
-<span class="sd">		effect_importance --&gt; The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)</span>
-
-<span class="sd">		effect_importance_fluctuation --&gt; The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)</span>
-
-<span class="sd">		effect_importance_il --&gt; The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)</span>
-
-<span class="sd">		effect_window_act_control --&gt; The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)</span>
-
-<span class="sd">		effect_window_act_control_fluctuation --&gt; The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)</span>
-
+<span class="sd">		</span>
 <span class="sd">		:param window: Lower and upper bounds of the total data to be taken into account in the analysis, relative to the corrosion potential [min value, max value], units [V vs E_corr] </span>
 <span class="sd">		:type window: 2-length sequence</span>
 
@@ -407,6 +398,13 @@
 
 <span class="sd">		:param output_foler: The main output directory in which the 5 directories with figures will be saved (Default:&#39;sensitivity_analysis&#39;)</span>
 <span class="sd">		:type output_folder: string</span>
+
+<span class="sd">		:return 5 figures:</span>
+<span class="sd">			- effect_importance: The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)</span>
+<span class="sd">			- effect_importance_fluctuation: The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)</span>
+<span class="sd">			- effect_importance_il: The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)</span>
+<span class="sd">			- effect_window_act_control: The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)</span>
+<span class="sd">			- effect_window_act_control_fluctuation: The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)</span>
 <span class="sd">		&quot;&quot;&quot;</span>
 
 		<span class="c1"># Initializing parameter search</span>
@@ -437,7 +435,6 @@
 							                         <span class="s1">&#39;importance&#39;</span><span class="p">:[</span><span class="n">importance</span><span class="p">]})</span>
 						<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df_temp</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-
 		<span class="c1"># plotting</span>
 
 		<span class="c1"># making the directories</span>
@@ -449,7 +446,7 @@
 			<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_folder</span><span class="o">+</span><span class="s1">&#39;/effect_window_act_control_fluctuation&#39;</span><span class="p">)</span>
 
 		<span class="k">except</span><span class="p">:</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Output folder exists - plots will be overwritten&#39;</span><span class="p">)</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Warning: Output folder(s) exist(s) - plots will be overwritten&#39;</span><span class="p">)</span>
 		
 		<span class="c1"># plot 1: effect_importance</span>
 		<span class="k">for</span> <span class="n">w_ac</span> <span class="ow">in</span> <span class="n">w_ac_</span><span class="p">:</span>
@@ -598,7 +595,6 @@
 	<span class="k">def</span> <span class="nf">truncate_colormap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">minval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">maxval</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
 		<span class="n">new_cmap</span> <span class="o">=</span> <span class="n">colours</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;trunc(</span><span class="si">{n}</span><span class="s1">,</span><span class="si">{a:.2f}</span><span class="s1">,</span><span class="si">{b:.2f}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">cmap</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">minval</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">maxval</span><span class="p">),</span><span class="n">cmap</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="n">maxval</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
 		<span class="k">return</span> <span class="n">new_cmap</span>
-
 
 	<span class="c1"># function for plotting, dependency of W</span>
 	<span class="k">def</span> <span class="nf">plot_effect_W</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">,</span><span class="n">w_ac</span><span class="p">,</span><span class="n">importance_</span><span class="p">,</span><span class="n">param</span><span class="p">,</span><span class="n">ylabel</span><span class="p">,</span><span class="n">output_folder</span><span class="p">,</span><span class="n">fluctuation</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>

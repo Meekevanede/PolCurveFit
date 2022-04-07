@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Example 2 &mdash; PolCurveFit  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>Example 2: Activation control fit &mdash; PolCurveFit  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -16,7 +16,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="prev" title="Example 1" href="example1.html" /> 
+    <link rel="next" title="Example 2: Mixed activation-diffusion control fit" href="example3.html" />
+    <link rel="prev" title="Example 1: Tafel extrapolation" href="example1.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,8 +45,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Examples</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="example1.html">Example 1</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example1.html">Example 1: Tafel extrapolation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example 2: Activation control fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example3.html">Example 2: Mixed activation-diffusion control fit</a></li>
 </ul>
 
         </div>
@@ -62,7 +64,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Example 2</li>
+      <li>Example 2: Activation control fit</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/examples/example2.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -72,16 +74,58 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="example-2">
-<h1>Example 2<a class="headerlink" href="#example-2" title="Permalink to this headline">¶</a></h1>
-<p>Here you will find examples showing how to use the library</p>
+  <div class="section" id="example-2-activation-control-fit">
+<h1>Example 2: Activation control fit<a class="headerlink" href="#example-2-activation-control-fit" title="Permalink to this headline">¶</a></h1>
+<p>In this example, you will see how to apply ‘the activation control fit’ to your polarization curve. This technique  can be applied for currents around the corrosion potential (OCP), that are  solely under activation control. We will start with making an artificial Polarization curve:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I_corr</span> <span class="o">=</span> <span class="mf">0.002</span>   <span class="c1"># The corrosion current [A]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E_corr</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.2</span>    <span class="c1"># The corrosion potential [V vs Ref]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b_a</span> <span class="o">=</span> <span class="mf">0.08</span>       <span class="c1"># The anodic Tafel slope [V]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b_c</span> <span class="o">=</span> <span class="mf">0.18</span>       <span class="c1"># The cathodic Tafel slope [V]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I_L</span> <span class="o">=</span> <span class="mf">0.3</span>        <span class="c1"># The limiting current [A]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">I_corr</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">2.3</span><span class="o">*</span><span class="p">(</span><span class="n">E</span><span class="o">-</span><span class="n">E_corr</span><span class="p">)</span><span class="o">/</span><span class="n">b_a</span><span class="p">)</span> <span class="o">-</span> <span class="p">(((</span><span class="n">I_corr</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">2.3</span><span class="o">*</span><span class="p">(</span><span class="n">E_corr</span><span class="o">-</span><span class="n">E</span><span class="p">)</span><span class="o">/</span><span class="n">b_c</span><span class="p">))</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">((</span><span class="n">I_corr</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">2.3</span><span class="o">*</span><span class="p">(</span><span class="n">E_corr</span><span class="o">-</span><span class="n">E</span><span class="p">)</span><span class="o">/</span><span class="n">b_c</span><span class="p">))</span><span class="o">/</span><span class="n">I_L</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This example curve looks as following (in a semilogarithmic plot):</p>
+<a class="reference internal image-reference" href="../../_images/example_curve.jpeg"><img alt="Alternative text" src="../../_images/example_curve.jpeg" style="width: 400px;" /></a>
+<p>Now we initiate the polarization curve object. Here we get the option to correct the data for the IR drop, and convert the current into current density. Let’s say the surface area corresponding to this artificial curve is 10 cm^2, and the IR-drop is negligible:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">polcurvefit</span> <span class="kn">import</span> <span class="n">PolCurveFit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Polcurve</span> <span class="o">=</span> <span class="n">PolCurveFit</span><span class="p">(</span><span class="n">E</span><span class="p">,</span><span class="n">I</span><span class="p">,</span><span class="n">sample_surface</span><span class="o">=</span><span class="mf">10E-04</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can visualise the corrected polarization curve</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Polcurve</span><span class="o">.</span><span class="n">E</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Polcurve</span><span class="o">.</span><span class="n">i</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;E [V vs ref]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;|i| [A/m2]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../../_images/example_curve2.jpeg"><img alt="Alternative text" src="../../_images/example_curve2.jpeg" style="width: 400px;" /></a>
+<p>From the plot we can see that currents corresponding to a potential of larger than approximately -0.55 are under activation control. To perform the activation control fit, we need to specify the  window relative to the corrosion potential. Therefore:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">Polcurve</span><span class="o">.</span><span class="n">active_pol_fit</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.35</span><span class="p">,</span><span class="mf">0.3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined cathodic Tafel slope: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;[V]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined anodic Tafel slope: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s1">&#39;[V]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined corrosion current density: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;[A/m2]&#39;</span><span class="p">)</span>
+
+<span class="go">The determined cathodic Tafel slope:  -0.1810121613410176 [V]</span>
+<span class="go">The determined anodic Tafel slope:  0.08000205135784974 [V]</span>
+<span class="go">The determined corrosion current density:  2.0004107350220828 [A/m2]</span>
+</pre></div>
+</div>
+<p>‘results’ includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Polcurve</span><span class="o">.</span><span class="n">plotting</span><span class="p">(</span><span class="n">output_folder</span><span class="o">=</span><span class="s1">&#39;Visualization_activation_control_fit&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="example1.html" class="btn btn-neutral float-left" title="Example 1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="example1.html" class="btn btn-neutral float-left" title="Example 1: Tafel extrapolation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="example3.html" class="btn btn-neutral float-right" title="Example 2: Mixed activation-diffusion control fit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

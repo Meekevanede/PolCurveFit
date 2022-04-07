@@ -26,7 +26,7 @@ class PolCurveFit:
 	:param R: The resistance, to correct for the voltage drop (IR-drop/ohmic potential drop) [Ohm] (Default = 0.0)
 	:type R: float
 
-	:param sample_surface: The surface area of the metal sample surface measured. This used to convert from current to current density. If I is already the current density, use the default. If the surface area is not given, the obtained corrosion rates and exchange current density are simply currents (default = 1.0).
+	:param sample_surface: The surface area of the metal sample surface measured. This used to convert from current to current density. If I is already the current density, use the default. If the surface area is not given, the obtained corrosion rates and exchange current density are simply currents (Default = 1.0).
 	:type sample_surface: float
 
 	"""
@@ -83,7 +83,7 @@ class PolCurveFit:
 		:param E_rev: The reversible potential [V vs ref] of the anodic OR cathodic reaction of the Tafel region that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev: float
 
-		:returns: 
+		:return tuple Results:  
 			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]
 			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]
 			- I_corr (:py:class:`float`) - the corrosion rate (if the corrosion potential is given as input) [A/surface area]
@@ -186,9 +186,9 @@ class PolCurveFit:
 
 		if obtain_io:
 			io_an, io_cath = self.compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
-			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], popt[2], RMSE, io_an, io_cath
+			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], RMSE, io_an, io_cath
 		else:
-			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], popt[2], RMSE
+			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], RMSE
 
 
 ############################## Mixed activation-difussion control fit #############
@@ -230,7 +230,7 @@ class PolCurveFit:
 		:param E_rev_cath: The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)
 		:type E_rev_cath: float
 
-		:return tuple Results: 
+		:return tulple Results: 
 			- fit_results (:py:class:`2xN array`) - the fit to the data [current densities (N-array), potentials (N-array)]
 			- E_corr (:py:class:`float`) - the corrosion potential [V vs ref]
 			- I_corr (:py:class:`float`) - the corrosion rate  [A/surface area]
@@ -248,7 +248,6 @@ class PolCurveFit:
 			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
 		if (i_L_guess>self.i.max() or i_L_guess<self.i.min()) and i_L_guess!= 10**1.103:
 			warnings.warn("Specified i_L_guess does not lie within the range of the current density")
-
 
 		# obtain E_corr
 		E_corr = self.find_Ecorr()
@@ -273,7 +272,7 @@ class PolCurveFit:
 			obj_func=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
 
 		else:
-			popt, pcov = curve_fit(forward, xdata, I_cut, sigma=sigma, p0=[math.log10(i_corr_guess), 0.0600, 0.100, math.log10(i_L_guess),3 ], bounds=((-8,0,0,-8,2),(1,1,1,2,4))) 
+			popt, pcov = curve_fit(forward, xdata, I_cut, sigma=sigma, p0=[math.log10(i_corr_guess), 0.0600, 0.100, math.log10(i_L_guess),3 ], bounds=((-8,0,0,-8,2),(1,1,1,5,4))) 
 			d_final = forward(xdata, popt[0], popt[1], popt[2], popt[3],popt[4])
 			d_final[d_final == 0] = 1E-8  # to get rid of zeros
 			obj_func=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
@@ -288,9 +287,9 @@ class PolCurveFit:
 
 		if obtain_io:
 			io_an, io_cath = self.compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
-			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], popt[2], 10**popt[3], obj_func, popt[4], io_an, io_cath
+			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], obj_func, popt[4], io_an, io_cath
 		else:
-			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], popt[2], 10**popt[3], obj_func, popt[4]
+			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], obj_func, popt[4]
 	
 
 ########################### Sensitivity analysis #############################
@@ -301,18 +300,9 @@ class PolCurveFit:
 		"""
 		Sensitivity analysis of the 'mixed activation-diffusion control fit' to the set parameters for the weight distribution.
 		It returns 5 plots, showing the effect of the importance & w_acon on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).
-		The 5 kind of plots are safed in different folders in the output_folder:
+		The 5 plots are safed in different folders in the output_folder
 
-		effect_importance --> The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)
-
-		effect_importance_fluctuation --> The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)
-
-		effect_importance_il --> The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)
-
-		effect_window_act_control --> The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)
-
-		effect_window_act_control_fluctuation --> The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)
-
+		
 		:param window: Lower and upper bounds of the total data to be taken into account in the analysis, relative to the corrosion potential [min value, max value], units [V vs E_corr] 
 		:type window: 2-length sequence
 
@@ -333,6 +323,13 @@ class PolCurveFit:
 
 		:param output_foler: The main output directory in which the 5 directories with figures will be saved (Default:'sensitivity_analysis')
 		:type output_folder: string
+
+		:return 5 figures:
+			- effect_importance: The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)
+			- effect_importance_fluctuation: The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)
+			- effect_importance_il: The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)
+			- effect_window_act_control: The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)
+			- effect_window_act_control_fluctuation: The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)
 		"""
 
 		# Initializing parameter search
@@ -363,7 +360,6 @@ class PolCurveFit:
 							                         'importance':[importance]})
 						df = df.append(df_temp, ignore_index=True)
 
-
 		# plotting
 
 		# making the directories
@@ -375,7 +371,7 @@ class PolCurveFit:
 			os.makedirs(output_folder+'/effect_window_act_control_fluctuation')
 
 		except:
-			print('Output folder exists - plots will be overwritten')
+			print('Warning: Output folder(s) exist(s) - plots will be overwritten')
 		
 		# plot 1: effect_importance
 		for w_ac in w_ac_:
@@ -524,7 +520,6 @@ class PolCurveFit:
 	def truncate_colormap(self, cmap, minval=0.0, maxval=1.0, n=100):
 		new_cmap = colours.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),cmap(np.linspace(minval, maxval, n)))
 		return new_cmap
-
 
 	# function for plotting, dependency of W
 	def plot_effect_W(self,df,w_ac,importance_,param,ylabel,output_folder,fluctuation=False):

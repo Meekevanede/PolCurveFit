@@ -1,8 +1,8 @@
-=================================
-Example 2: Activation control fit
-=================================
+=================================================
+Example 3: Mixed activation-diffusion control fit
+=================================================
 
-In this example, you will see how to apply 'the activation control fit' to your polarization curve. This technique  can be applied for currents around the corrosion potential (OCP), that are  solely under activation control. We will start with making an artificial Polarization curve:
+In this example, you will see how to apply 'the mixed activation-diffusion control fit' to your polarization curve. This technique can be applied for currents around the corrosion potential (OCP), of which the currents in the cathodic branch is under mixed activation-diffusion control. We will start with making an artificial Polarization curve:
 
 .. code-block:: python
    
@@ -42,24 +42,26 @@ We can visualise the corrected polarization curve
    :width: 400
    :alt: Alternative text
 
-From the plot we can see that currents corresponding to a potential of larger than approximately -0.55 are under activation control. To perform the activation control fit, we need to specify the  window relative to the corrosion potential. Therefore:
+From the plot we can see that for this fitting technique we can include all currents. Note that it is important that the currents are only controlled by one cathodic and one anodic reaction. To perform the mixed activation-diffusion control fit, we need to specify the  window relative to the corrosion potential. Therefore:
 
 .. code-block:: python
    
-   >>> results = Polcurve.active_pol_fit(window=[-0.35,0.3])
+   >>> results = Polcurve.mixed_pol_fit(window=[-0.8,0.3])
    >>> print('The determined cathodic Tafel slope: ', results[4], '[V]')
    >>> print('The determined anodic Tafel slope: ', results[3], '[V]')
    >>> print('The determined corrosion current density: ', results[2], '[A/m2]')
+   >>> print('The determined limiting current density: ', results[5], '[A/m2]')
 
-   The determined cathodic Tafel slope:  -0.1810121613410176 [V]
-   The determined anodic Tafel slope:  0.08000205135784974 [V]
-   The determined corrosion current density:  2.0004107350220828 [A/m2]
+   The determined cathodic Tafel slope:  -0.1800000000000017 [V]
+   The determined anodic Tafel slope:  0.08000000000000007 [V]
+   The determined corrosion current density:  2.000000000000054 [A/m2]
+   The determined limiting current density:  299.99999999999983 [A/m2]
 
 'results' includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:
 
 .. code-block:: python
    
-   >>> Polcurve.plotting(output_folder='Visualization_activation_control_fit')
+   >>> Polcurve.plotting(output_folder='Visualization_mixed_control_fit')
 
 
 

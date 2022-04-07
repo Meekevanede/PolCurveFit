@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Example 1: Tafel extrapolation (Linear fit) &mdash; PolCurveFit  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>Example 3: Mixed activation-diffusion control fit &mdash; PolCurveFit  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -16,8 +16,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Example 2: Activation control fit" href="example2.html" />
-    <link rel="prev" title="Getting started" href="getting_started.html" /> 
+    <link rel="prev" title="Example 2: Activation control fit" href="example2.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,9 +44,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Examples</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Example 1: Tafel extrapolation (Linear fit)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example1.html">Example 1: Tafel extrapolation (Linear fit)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="example2.html">Example 2: Activation control fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="example3.html">Example 3: Mixed activation-diffusion control fit</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example 3: Mixed activation-diffusion control fit</a></li>
 </ul>
 
         </div>
@@ -64,9 +63,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Example 1: Tafel extrapolation (Linear fit)</li>
+      <li>Example 3: Mixed activation-diffusion control fit</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/source/examples/example1.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/source/examples/example3.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -74,9 +73,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="example-1-tafel-extrapolation-linear-fit">
-<h1>Example 1: Tafel extrapolation (Linear fit)<a class="headerlink" href="#example-1-tafel-extrapolation-linear-fit" title="Permalink to this headline">¶</a></h1>
-<p>In this example, you will see how to apply Tafel extrapolation to your polarization curve. We will start with making an artificial Polarization curve:</p>
+  <div class="section" id="example-3-mixed-activation-diffusion-control-fit">
+<h1>Example 3: Mixed activation-diffusion control fit<a class="headerlink" href="#example-3-mixed-activation-diffusion-control-fit" title="Permalink to this headline">¶</a></h1>
+<p>In this example, you will see how to apply ‘the mixed activation-diffusion control fit’ to your polarization curve. This technique can be applied for currents around the corrosion potential (OCP), of which the currents in the cathodic branch is under mixed activation-diffusion control. We will start with making an artificial Polarization curve:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">I_corr</span> <span class="o">=</span> <span class="mf">0.002</span>   <span class="c1"># The corrosion current [A]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">E_corr</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.2</span>    <span class="c1"># The corrosion potential [V vs Ref]</span>
@@ -103,17 +102,21 @@
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../../_images/example_curve2.jpeg"><img alt="Alternative text" src="../../_images/example_curve2.jpeg" style="width: 400px;" /></a>
-<p>From the plot we can see that if we would like the cathodic Tafel slope, we should perform the linear fit between approximately -0.55 V vs ref and -0.3 V vs ref. We can also specify E_corr, so that the function can also supply us with the corrosion current density:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">Polcurve</span><span class="o">.</span><span class="n">linear_fit</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.55</span><span class="p">,</span><span class="o">-</span><span class="mf">0.3</span><span class="p">],</span> <span class="n">E_corr</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined Tafel slope: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s1">&#39;[V]&#39;</span><span class="p">)</span>
+<p>From the plot we can see that for this fitting technique we can include all currents. Note that it is important that the currents are only controlled by one cathodic and one anodic reaction. To perform the mixed activation-diffusion control fit, we need to specify the  window relative to the corrosion potential. Therefore:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">Polcurve</span><span class="o">.</span><span class="n">mixed_pol_fit</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">0.8</span><span class="p">,</span><span class="mf">0.3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined cathodic Tafel slope: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;[V]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined anodic Tafel slope: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s1">&#39;[V]&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined corrosion current density: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;[A/m2]&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The determined limiting current density: &#39;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="s1">&#39;[A/m2]&#39;</span><span class="p">)</span>
 
-<span class="go">The determined Tafel slope:  -0.1819774491837005 [V]</span>
-<span class="go">The determined corrosion current density:  2.0395128285571236 [A/m2]</span>
+<span class="go">The determined cathodic Tafel slope:  -0.1800000000000017 [V]</span>
+<span class="go">The determined anodic Tafel slope:  0.08000000000000007 [V]</span>
+<span class="go">The determined corrosion current density:  2.000000000000054 [A/m2]</span>
+<span class="go">The determined limiting current density:  299.99999999999983 [A/m2]</span>
 </pre></div>
 </div>
 <p>‘results’ includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Polcurve</span><span class="o">.</span><span class="n">plotting</span><span class="p">(</span><span class="n">output_folder</span><span class="o">=</span><span class="s1">&#39;Visualization_Tafel_fit&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Polcurve</span><span class="o">.</span><span class="n">plotting</span><span class="p">(</span><span class="n">output_folder</span><span class="o">=</span><span class="s1">&#39;Visualization_mixed_control_fit&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -122,8 +125,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="example2.html" class="btn btn-neutral float-right" title="Example 2: Activation control fit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="example2.html" class="btn btn-neutral float-left" title="Example 2: Activation control fit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

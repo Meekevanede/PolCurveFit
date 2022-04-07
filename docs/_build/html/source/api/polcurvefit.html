@@ -45,8 +45,9 @@
 </ul>
 <p class="caption"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../examples/example1.html">Example 1</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples/example2.html">Example 2</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/example1.html">Example 1: Tafel extrapolation (Linear fit)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/example2.html">Example 2: Activation control fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/example3.html">Example 3: Mixed activation-diffusion control fit</a></li>
 </ul>
 
         </div>
@@ -136,8 +137,8 @@ the returned I_corr relects the corrosion rate.</p>
 <li><p><strong>E_rev</strong> (<em>float</em>) – The reversible potential [V vs ref] of the anodic OR cathodic reaction of the Tafel region that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
+<dt class="field-even">Return tuple Results</dt>
+<dd class="field-even"><ul class="simple">
 <li><p>fit_results (<code class="xref py py-class docutils literal notranslate"><span class="pre">2xN</span> <span class="pre">array</span></code>) - the fit to the data [current densities (N-array), potentials (N-array)]</p></li>
 <li><p>E_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion potential [V vs ref]</p></li>
 <li><p>I_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion rate (if the corrosion potential is given as input) [A/surface area]</p></li>
@@ -145,7 +146,6 @@ the returned I_corr relects the corrosion rate.</p>
 <li><p>RMSE (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the root mean squared error of the fit</p></li>
 <li><p>io (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - Only returned, if obtain_io is True. The exchange current density [A/surface area].</p></li>
 </ul>
-</p>
 </dd>
 </dl>
 </dd></dl>
@@ -171,7 +171,7 @@ Describe the weight distribution !!!!!!</p>
 <li><p><strong>E_rev_cath</strong> (<em>float</em>) – The reversible potential [V vs ref] of the cathodic reaction of the data that is fitted. Needs to be specified if obtain_io=True. (Default = 0.0)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return tuple Results</dt>
+<dt class="field-even">Return tulple Results</dt>
 <dd class="field-even"><ul class="simple">
 <li><p>fit_results (<code class="xref py py-class docutils literal notranslate"><span class="pre">2xN</span> <span class="pre">array</span></code>) - the fit to the data [current densities (N-array), potentials (N-array)]</p></li>
 <li><p>E_corr (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) - the corrosion potential [V vs ref]</p></li>
@@ -208,12 +208,7 @@ results_overview: plot of the observed data and the obtained Tafel slope(s) (and
 <code class="descname">sens_analysis</code><span class="sig-paren">(</span><em>window, start_diffusion_control, importance=[50, 70, 80, 90, 0], i_corr_guess=0.01, i_L_guess=10, fix_i_L=False, output_folder='sensitivity_analysis'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.sens_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.sens_analysis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sensitivity analysis of the ‘mixed activation-diffusion control fit’ to the set parameters for the weight distribution.
 It returns 5 plots, showing the effect of the importance &amp; w_acon on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).
-The 5 kind of plots are safed in different folders in the output_folder:</p>
-<p>effect_importance –&gt; The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)</p>
-<p>effect_importance_fluctuation –&gt; The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)</p>
-<p>effect_importance_il –&gt; The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)</p>
-<p>effect_window_act_control –&gt; The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)</p>
-<p>effect_window_act_control_fluctuation –&gt; The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)</p>
+The 5 plots are safed in different folders in the output_folder</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -224,6 +219,15 @@ The 5 kind of plots are safed in different folders in the output_folder:</p>
 <li><p><strong>i_L_guess</strong> (<em>float</em>) – First guess of the limiting current density (optional) [A/surface area], it can to faster convergence and a more accurate fit (Default: 10^1).</p></li>
 <li><p><strong>fix_i_L</strong> (<em>bool</em>) – If True, the limiting current density is fixed at the value of i_L_guess. (Default:False)</p></li>
 <li><p><strong>output_foler</strong> – The main output directory in which the 5 directories with figures will be saved (Default:’sensitivity_analysis’)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return 5 figures</dt>
+<dd class="field-even"><ul class="simple">
+<li><p>effect_importance: The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)</p></li>
+<li><p>effect_importance_fluctuation: The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)</p></li>
+<li><p>effect_importance_il: The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)</p></li>
+<li><p>effect_window_act_control: The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)</p></li>
+<li><p>effect_window_act_control_fluctuation: The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)</p></li>
 </ul>
 </dd>
 </dl>

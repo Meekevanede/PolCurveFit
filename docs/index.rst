@@ -24,5 +24,6 @@ Welcome to PolCurveFit's documentation!
 
    source/examples/example1
    source/examples/example2
+   source/examples/example3
 
 
