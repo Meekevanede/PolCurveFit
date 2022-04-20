@@ -59,6 +59,18 @@ class PolCurveFit:
 		# obtain current density
 		self.i = self.I/sample_surface
 
+		# Initializing fitting parameters
+		self.fit_results = None
+		self.E_corr = None
+		self.I_corr = None
+		self.b_a = None
+		self.b_c = None
+		self.i_L = None
+		self.gamma = None
+		self.RMSE = None
+		self.io_an = None
+		self.io_cath = None
+
 	def __str__(self):
 		return str(self.__class__) + ": " + str(self.__dict__)
 
@@ -114,11 +126,13 @@ class PolCurveFit:
 		self.I_corr = I_corr_best
 		self.b_a = 1/popt[0]
 		self.b_c = None
+		self.RMSE = RMSE
 		self.i_L = None
 
 		# compute exchange current density	
 		if obtain_io:
 			io = self.compute_exchcurrent(I_corr_best,E_corr, 1/popt[0], E_rev)
+			self.io_an = io
 			return [d_final, E_cut], E_corr, 10**I_corr_best, 1/popt[0], RMSE, io
 		else:
 			return [d_final, E_cut], E_corr, 10**I_corr_best, 1/popt[0], RMSE
@@ -181,13 +195,18 @@ class PolCurveFit:
 		self.I_corr = popt[0]
 		self.b_a = popt[1]
 		self.b_c = popt[2]
+		self.RMSE = RMSE
 		self.i_L = None
 
 
 		if obtain_io:
 			io_an, io_cath = self.compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
+			self.io_an = io_an
+			self.io_cath = io_cath
 			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], RMSE, io_an, io_cath
 		else:
+			self.io_an = None
+			self.io_cath = None
 			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], RMSE
 
 
@@ -284,11 +303,16 @@ class PolCurveFit:
 		self.b_c = popt[2]
 		self.i_L = popt[3]
 		self.gamma = popt[4]
+		self.RMSE = RMSE
 
 		if obtain_io:
 			io_an, io_cath = self.compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
+			self.io_an = io_an
+			self.io_cath = io_cath
 			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], obj_func, popt[4], io_an, io_cath
 		else:
+			self.io_an = None
+			self.io_cath = None
 			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], obj_func, popt[4]
 	
 
@@ -462,6 +486,48 @@ class PolCurveFit:
 		fig.savefig(output_folder + '/results_overview.jpeg', format='jpeg', dpi=1000)
 		plt.close('all')
 		
+############################## Writing ######################################
+##############################################################################
+
+	def save_to_txt(self, output_folder = '.', file_name = 'fitting_results'):
+
+		"""
+		Saving of the results obtained from the fitting in a txt file. It lists both the fitted parameters, as 
+		the corresponding curve
+
+		:param output_folder: Directory in which the file is safed. (Default: '.')
+		:type output_folder: string
+
+		:param file_name: Name of the txt file. (Default: 'fitting_results')
+		:type file_name: string
+
+		"""
+
+		with open(output_folder +'/'+ file_name+'.txt', 'w') as f:
+			f.write('Fitted parameters: ' + '\n')
+			f.write('Corrosion potential (E_corr) [V vs Ref] = ' + '%.4f' % self.E_corr + '\n') 
+			f.write('Corrosion current (density) (I_corr)  = ' + '%.4f' % self.I_corr + '\n')
+			if self.b_c == None:
+				f.write('Tafel slope (b) [V]  = ' + '%.4f' % self.b_a + '\n')
+			else:
+				f.write('Anodic Tafel slope (b_a) [V] = ' + '%.4f' % self.b_a + '\n')
+				f.write('Cathodic Tafel slope (b_c) [V] = ' + '%.4f' % self.b_c + '\n')
+			if self.i_L != None:
+				f.write('Limiting current (density) (i_L) = ' + '%.4f' % self.i_L + '\n')
+			f.write('RMSE = ' + '%.4f' % self.RMSE + '\n')
+			if self.b_c == None:
+				if self.io_an != None:
+					f.write('Exchange current (density) (io) = ' + '%.4f' % self.io_an + '\n')
+			else:
+				if self.io_an != None:
+					f.write('Anodic exchange current (density) (io_an) = ' + '%.4f' % self.io_an + '\n')
+				if self.io_cath != None:
+					f.write('Cathodic exchange current (density) (io_cath) = ' + '%.4f' % self.io_cath + '\n')
+			f.write('\n')
+			f.write('Fitted curve: \n')
+			f.write('E_fit [V vs Ref] \t I_fit \n')
+			np.savetxt(f, np.c_[self.fit_results[1], self.fit_results[0]],newline='\n')
+
 
 
 	############################## Data functions ################################

@@ -1,5 +1,5 @@
 ==============
-Getting started
+Installation 
 ==============
 
 To install the library, simply use pip install:

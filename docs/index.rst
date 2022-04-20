@@ -6,11 +6,15 @@
 Welcome to PolCurveFit's documentation!
 =======================================
 
+The python library pol-curve-fit!!!!! allows the user to analyse measured polarization curves and obtain parameters such as the Tafel slopes, exchange current densities and corrosion rates. It implements three techniques: Tafel extrapolation (linear fit), 'activation control fit' and 'mixed activation-diffusion control fit'. Here you will find information about the working of the different techniques and how to use the library.
+
 .. toctree::
    :maxdepth: 2
    :caption: Python Class PolCurveFit
 
+   source/api/introduction
    source/api/polcurvefit
+   
 
 .. toctree::
    :maxdepth: 2
