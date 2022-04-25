@@ -54,7 +54,7 @@ class PolCurveFit:
 
 		self.E_obs = self.E
 		# IR correction
-		self.E = self.ir_correction(R)
+		self.E = self._ir_correction(R)
 
 		# obtain current density
 		self.i = self.I/sample_surface
@@ -70,6 +70,9 @@ class PolCurveFit:
 		self.RMSE = None
 		self.io_an = None
 		self.io_cath = None
+		self.w_ac = None
+		self.W = None
+		self.apply_W = None
 
 	def __str__(self):
 		return str(self.__class__) + ": " + str(self.__dict__)
@@ -105,7 +108,7 @@ class PolCurveFit:
 		"""
 
 		# select data in specified window
-		E_cut, I_cut = self.windowcut(self.E,self.i,0.0, window)
+		E_cut, I_cut = self._windowcut(self.E,self.i,0.0, window)
 
 		# fitting
 		xdata = np.zeros((len(E_cut),1))
@@ -131,7 +134,7 @@ class PolCurveFit:
 
 		# compute exchange current density	
 		if obtain_io:
-			io = self.compute_exchcurrent(I_corr_best,E_corr, 1/popt[0], E_rev)
+			io = self._compute_exchcurrent(I_corr_best,E_corr, 1/popt[0], E_rev)
 			self.io_an = io
 			return [d_final, E_cut], E_corr, 10**I_corr_best, 1/popt[0], RMSE, io
 		else:
@@ -140,7 +143,7 @@ class PolCurveFit:
 
 ############################## Activation control fit ########################
 ##############################################################################
-	def active_pol_fit(self,window, i_corr_guess = 10**-2.103, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
+	def active_pol_fit(self,window, i_corr_guess = None, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
 		"""
 		Fitting of a theoretical description, representative for the anodic and cathodic activation controlled currents around the Corrosion potential (OCP).
 		This option is suitable for data of which the anodic and cathodic branches are solely under activation control.
@@ -171,21 +174,25 @@ class PolCurveFit:
 			- io_cath (:py:class:`float`) - Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].
 			 
 		"""
+		if i_corr_guess == None:
+			i_corr_guess = np.mean(self.i)
+
 		# check input 
 		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()) and i_corr_guess!= 10**-2.103:
 			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
 
 		# obtain E_corr
-		E_corr = self.find_Ecorr()
+		E_corr = self._find_Ecorr()
 
 		# select data in specified window
-		E_cut, I_cut = self.windowcut(self.E,self.i,E_corr, window)
+		E_cut, I_cut = self._windowcut(self.E,self.i,E_corr, window)
 
 		# fitting
 		xdata = np.zeros((len(E_cut),2))
 		xdata[:,0] = E_cut
 		xdata[:,1] = E_corr
-		popt, pcov = curve_fit(forward_normal, xdata, I_cut, p0=[math.log10(i_corr_guess), 0.0600, 0.100], bounds=((-8,0,0),(1,1,1)))
+
+		popt, pcov = curve_fit(forward_normal, xdata, I_cut, p0=[math.log10(np.abs(i_corr_guess)), 0.0600, 0.100], bounds=((math.log10(np.abs(self.i).min()),0,0),(math.log10(np.abs(self.i).max()),1,1)))
 		d_final = forward_normal(xdata, popt[0], popt[1], popt[2])
 		d_final[d_final == 0] = 1E-8 # to get rid of zeros
 		RMSE=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
@@ -200,7 +207,7 @@ class PolCurveFit:
 
 
 		if obtain_io:
-			io_an, io_cath = self.compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
+			io_an, io_cath = self._compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
 			self.io_an = io_an
 			self.io_cath = io_cath
 			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], RMSE, io_an, io_cath
@@ -212,12 +219,12 @@ class PolCurveFit:
 
 ############################## Mixed activation-difussion control fit #############
 ###################################################################################
-	def mixed_pol_fit(self,window, i_corr_guess = 10**-2.103, i_L_guess = 10**1.103, fix_i_L = False, apply_weight_distribution = False, w_ac = 0.04, W = 75, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
+	def mixed_pol_fit(self,window, i_corr_guess = None, i_L_guess = None, fix_i_L = False, apply_weight_distribution = False, w_ac = 0.04, W = 75, obtain_io = False, E_rev_an = 0, E_rev_cath = 0):
 		
 		"""
 		Fitting of a theoretical description, representative for the anodic activation controlled currents and cathodic mixed activation-diffusion controlled currents.
 		This option is suitable for data of which the anodic is under activation control and the cathodic branche are under mixed activation-diffusion control.
-		Describe the weight distribution !!!!!!
+		To obtain more accurate and less subjective fit, a specific weight distribution can be applied (see Documentation)
 		
 		:param window: Lower and upper bounds of the data to be fitted, relative to the corrosion potential [min value, max value], units [V vs E_corr] 
 		:type window: 2-length sequence
@@ -262,6 +269,15 @@ class PolCurveFit:
 			- io_cath (:py:class:`float`) - Only returned, if obtain_io is True. The cathodic exchange current density [A/surface area].
 
 		"""
+
+		# obtaining automatic guesses for i_icorr and i_L
+		if i_corr_guess == None:
+			i_corr_guess = np.mean(self.i)
+		
+		if i_L_guess == None:
+			i_L_guess = np.mean(self.i)
+	
+
 		# check input 
 		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()) and i_corr_guess!= 10**-2.103:
 			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
@@ -269,32 +285,36 @@ class PolCurveFit:
 			warnings.warn("Specified i_L_guess does not lie within the range of the current density")
 
 		# obtain E_corr
-		E_corr = self.find_Ecorr()
+		E_corr = self._find_Ecorr()
 
 		# select data in specified window
-		E_cut, I_cut = self.windowcut(self.E,self.i,E_corr, window)
+		E_cut, I_cut = self._windowcut(self.E,self.i,E_corr, window)
 
 		# define standard error for fitting
 		if apply_weight_distribution:
-			sigma = self.apply_weight_distribution(E_cut, I_cut, E_corr, w_ac, W)
+			sigma = self._apply_weight_distribution(E_cut, I_cut, E_corr, w_ac, W)
 		else:
 			sigma = np.full((len(E_cut)), 1)
+
+		# Obtain the logarithm for the current densities
+		i_corr_guess = math.log10(np.abs(i_corr_guess))
+		i_L_guess = math.log10(np.abs(i_L_guess))
 
 		# fitting
 		xdata = np.zeros((len(E_cut),2))
 		xdata[:,0] = E_cut
 		xdata[:,1] = E_corr
 		if fix_i_L:
-			popt, pcov = curve_fit(forward, xdata, I_cut, sigma=sigma, p0=[math.log10(i_corr_guess), 0.0600, 0.100, math.log10(i_L_guess),3 ], bounds=((-8,0,0,math.log10(i_L_guess)-0.01,2),(1,1,1,math.log10(i_L_guess)+0.01,4)))
+			popt, pcov = curve_fit(forward, xdata, I_cut, sigma=sigma, p0=[i_corr_guess, 0.0600, 0.100, i_L_guess,3 ], bounds=((math.log10(np.abs(self.i).min()),0,0,i_L_guess-0.01,2),(math.log10(np.abs(self.i).max()),1,1,i_L_guess+0.01,4)))
 			d_final = forward(xdata, popt[0], popt[1], popt[2], popt[3],popt[4])
 			d_final[d_final == 0] = 1E-8  # to get rid of zeros
-			obj_func=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
+			RMSE=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
 
 		else:
-			popt, pcov = curve_fit(forward, xdata, I_cut, sigma=sigma, p0=[math.log10(i_corr_guess), 0.0600, 0.100, math.log10(i_L_guess),3 ], bounds=((-8,0,0,-8,2),(1,1,1,5,4))) 
+			popt, pcov = curve_fit(forward, xdata, I_cut, sigma=sigma, p0=[i_corr_guess, 0.0600, 0.100, i_L_guess,3 ], bounds=((math.log10(np.abs(self.i).min()),0,0,math.log10(np.abs(self.i).min()),2),(math.log10(np.abs(self.i).max()),1,1,math.log10(np.abs(self.i).max())+1,4))) 
 			d_final = forward(xdata, popt[0], popt[1], popt[2], popt[3],popt[4])
 			d_final[d_final == 0] = 1E-8  # to get rid of zeros
-			obj_func=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
+			RMSE=math.sqrt(np.sum(np.square(I_cut-d_final)).mean())
 		
 		self.fit_results = [d_final, E_cut]
 		self.E_corr = E_corr
@@ -304,16 +324,20 @@ class PolCurveFit:
 		self.i_L = popt[3]
 		self.gamma = popt[4]
 		self.RMSE = RMSE
+		self.w_ac = w_ac
+		self.W = W
+		self.apply_W = apply_weight_distribution
+
 
 		if obtain_io:
-			io_an, io_cath = self.compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
+			io_an, io_cath = self._compute_exchcurrent(popt[0],E_corr, popt[1], E_rev_an, popt[2], E_rev_cath)
 			self.io_an = io_an
 			self.io_cath = io_cath
-			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], obj_func, popt[4], io_an, io_cath
+			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], RMSE, popt[4], io_an, io_cath
 		else:
 			self.io_an = None
 			self.io_cath = None
-			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], obj_func, popt[4]
+			return [d_final, E_cut], E_corr, 10**popt[0], popt[1], -popt[2], 10**popt[3], RMSE, popt[4]
 	
 
 ########################### Sensitivity analysis #############################
@@ -399,25 +423,25 @@ class PolCurveFit:
 		
 		# plot 1: effect_importance
 		for w_ac in w_ac_:
-			self.plot_effect_W(df,w_ac,importance_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_importance/wac=',fluctuation=False)
+			self._plot_effect_W(df,w_ac,importance_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_importance/wac=',fluctuation=False)
 
 		# plot 2: effect_importance_fluctuation
 		for w_ac in w_ac_:
-			self.plot_effect_W(df,w_ac,importance_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder + '/effect_importance_fluctuation/wac=',fluctuation=True)
+			self._plot_effect_W(df,w_ac,importance_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder + '/effect_importance_fluctuation/wac=',fluctuation=True)
 
 		# plot 3: effect_importance_il
 		for w_ac in w_ac_:
-			self.plot_effect_W(df,w_ac,importance_,'i_L_best',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_importance_il/wac=',fluctuation=False)
+			self._plot_effect_W(df,w_ac,importance_,'i_L_best',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_importance_il/wac=',fluctuation=False)
 
 		# plot 4: effect_window_act_control
 		for importance in importance_:
 			if importance != 0:
-				self.plot_effect_wac(df,importance,w_ac_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control/W=',fluctuation=False)
+				self.__plot_effect_Wac(df,importance,w_ac_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control/W=',fluctuation=False)
 			
 		# plot 5: effect_window_act_control_fluctuation
 		for importance in importance_:
 			if importance != 0:
-				self.plot_effect_wac(df,importance,w_ac_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control_fluctuation/W=',fluctuation=True)
+				self.__plot_effect_Wac(df,importance,w_ac_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control_fluctuation/W=',fluctuation=True)
 			
 ############################## Plotting ######################################
 ##############################################################################
@@ -489,29 +513,38 @@ class PolCurveFit:
 ############################## Writing ######################################
 ##############################################################################
 
-	def save_to_txt(self, output_folder = '.', file_name = 'fitting_results'):
+	def save_to_txt(self, filename = './fitting_results'):
 
 		"""
-		Saving of the results obtained from the fitting in a txt file. It lists both the fitted parameters, as 
-		the corresponding curve
+		Saving of the results obtained from the fitting in a text file. It lists the fitting technique used, the fitted parameters, and 
+		the corresponding fitted curve
 
-		:param output_folder: Directory in which the file is safed. (Default: '.')
+		:param filename: path and name of the output file (Default: './fitting_results')
 		:type output_folder: string
 
-		:param file_name: Name of the txt file. (Default: 'fitting_results')
-		:type file_name: string
-
 		"""
 
-		with open(output_folder +'/'+ file_name+'.txt', 'w') as f:
-			f.write('Fitted parameters: ' + '\n')
+		with open(filename + '.txt', 'w') as f:
+			if self.b_c == None:
+				f.write('Results, obtained by the linear fit. \n\n Fitted parameters: ' + '\n')
+			elif self.i_L == None:
+				f.write('Results, obtained by the activation control fit \n\n Fitted parameters: ' + '\n')
+			else:
+				f.write('Results, obtained by the mixed diffusion-activation control fit \n\n')
+				if self.apply_W:
+					f.write('Weight distribution applied: \n')
+					f.write('window activation control (w_ac) [V] = '+ '%.3f' % self.w_ac + '\n')
+					f.write('Weight percentage (W) [%] = '+ '%.1f' % self.W + '\n\n')
+
+				f.write('Fitted parameters: ' + '\n')
+				
 			f.write('Corrosion potential (E_corr) [V vs Ref] = ' + '%.4f' % self.E_corr + '\n') 
 			f.write('Corrosion current (density) (I_corr)  = ' + '%.4f' % self.I_corr + '\n')
 			if self.b_c == None:
 				f.write('Tafel slope (b) [V]  = ' + '%.4f' % self.b_a + '\n')
 			else:
 				f.write('Anodic Tafel slope (b_a) [V] = ' + '%.4f' % self.b_a + '\n')
-				f.write('Cathodic Tafel slope (b_c) [V] = ' + '%.4f' % self.b_c + '\n')
+				f.write('Cathodic Tafel slope (b_c) [V] = ' + '%.4f' % -self.b_c + '\n')
 			if self.i_L != None:
 				f.write('Limiting current (density) (i_L) = ' + '%.4f' % self.i_L + '\n')
 			f.write('RMSE = ' + '%.4f' % self.RMSE + '\n')
@@ -525,7 +558,7 @@ class PolCurveFit:
 					f.write('Cathodic exchange current (density) (io_cath) = ' + '%.4f' % self.io_cath + '\n')
 			f.write('\n')
 			f.write('Fitted curve: \n')
-			f.write('E_fit [V vs Ref] \t I_fit \n')
+			f.write('E_fit [V vs Ref] \t I_fit [Unit input current/ input surface area] \n')
 			np.savetxt(f, np.c_[self.fit_results[1], self.fit_results[0]],newline='\n')
 
 
@@ -534,8 +567,8 @@ class PolCurveFit:
 	##############################################################################
 
 	# function to obtain the weight distribution for the 'mixed activation-diffusion control fit'
-	def apply_weight_distribution(self, E, I, E_corr, w_ac, W):
-		E_sigma, I_sigma = self.windowcut(E, I, E_corr,[-w_ac,w_ac])
+	def _apply_weight_distribution(self, E, I, E_corr, w_ac, W):
+		E_sigma, I_sigma = self._windowcut(E, I, E_corr,[-w_ac,w_ac])
 		sigma = np.full(len(E), 1.0)
 		for j in range(len(E)):
 			if (-w_ac <= (E[j]-E_corr)) and ((E[j]-E_corr)<= w_ac):
@@ -544,16 +577,16 @@ class PolCurveFit:
 		return sigma
 
 	# function to correct the data for the voltage drop (IR correction)
-	def ir_correction(self,R):
+	def _ir_correction(self,R):
 		return self.E-self.I*R
 
 	# function to obtain the corrosion potential E_corr
-	def find_Ecorr(self):
+	def _find_Ecorr(self):
 		min_index = np.argmin(np.abs(self.i)) 
 		return self.E[min_index]
 
 	# function to select the data within a certain window
-	def windowcut(self, E, i, E_corr, window):
+	def _windowcut(self, E, i, E_corr, window):
 		E_cut = []
 		I_cut = []
 		for j in range(len(i)):
@@ -563,7 +596,7 @@ class PolCurveFit:
 		return E_cut, I_cut
 
 	# function to compute the exchange current densities
-	def compute_exchcurrent(self,I_corr, E_corr, b_a, E_rev_an, b_c = None, E_rev_cath = None):
+	def _compute_exchcurrent(self,I_corr, E_corr, b_a, E_rev_an, b_c = None, E_rev_cath = None):
 	    if b_c == None:
 	    	io = I_corr - 1/b_a*(E_rev_an-0) # 0 corresponding to the computation of I_corr
 	    	return io
@@ -573,7 +606,7 @@ class PolCurveFit:
 	    return io_an, io_cath
 
 	# function to obtain the change in respect to the mean of the last 10 points
-	def get_fluc(self,y):
+	def _get_fluc(self,y):
 		y_fluc = np.zeros(len(y))
 		for j in range(1,len(y)-1):
 			if j<9:
@@ -583,12 +616,12 @@ class PolCurveFit:
 		return y_fluc
 				
 	# function to truncate a colormap
-	def truncate_colormap(self, cmap, minval=0.0, maxval=1.0, n=100):
+	def _truncate_colormap(self, cmap, minval=0.0, maxval=1.0, n=100):
 		new_cmap = colours.LinearSegmentedColormap.from_list('trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),cmap(np.linspace(minval, maxval, n)))
 		return new_cmap
 
 	# function for plotting, dependency of W
-	def plot_effect_W(self,df,w_ac,importance_,param,ylabel,output_folder,fluctuation=False):
+	def _plot_effect_W(self,df,w_ac,importance_,param,ylabel,output_folder,fluctuation=False):
 		plt.close('all')
 		fig,ax = plt.subplots(figsize=(10, 5))
 		for importance in importance_:				
@@ -598,7 +631,7 @@ class PolCurveFit:
 			y = df_select[param].to_numpy()
 
 			if fluctuation:	
-				y = self.get_fluc(y)
+				y = self._get_fluc(y)
 
 			if importance == 0:
 				plt.plot(x,y,'-k', label = 'not weighted')
@@ -615,7 +648,7 @@ class PolCurveFit:
 		fig.savefig(output_folder +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
 
 	# function for plotting, dependency on w_ac
-	def plot_effect_wac(self,df,importance,w_ac_,param,ylabel,output_folder,fluctuation=False):
+	def _plot_effect_Wac(self,df,importance,w_ac_,param,ylabel,output_folder,fluctuation=False):
 		# defining colorscale 
 		colors = plt.cm.Reds(np.linspace(0.2, 1.0, len(w_ac_)))
 		plt.close('all')
@@ -628,17 +661,17 @@ class PolCurveFit:
 			y = df_select[param].to_numpy()
 			
 			if fluctuation:	
-				y = self.get_fluc(y)
+				y = self._get_fluc(y)
 
 			plt.plot(x,y, color=colors[i], label = str(w_ac))
 			i+=1
 
 		df_select_notweighted = df.loc[(df['importance']==0) & (df['w_ac']==0.01)]
 		if fluctuation:
-			plt.plot(df_select_notweighted['window_cat'].to_numpy(),self.get_fluc(df_select_notweighted[param].to_numpy()), '--k')
+			plt.plot(df_select_notweighted['window_cat'].to_numpy(),self._get_fluc(df_select_notweighted[param].to_numpy()), '--k')
 		else:
 			plt.plot(df_select_notweighted['window_cat'].to_numpy(),df_select_notweighted[param].to_numpy(), '--k')
-		cmap=self.truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
+		cmap=self._truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
 		norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
 		plt.ylabel(ylabel)
 		plt.xlabel('cathodic window [V from OCP]')

@@ -57,11 +57,25 @@ From the plot we can see that for this fitting technique we can include all curr
    The determined corrosion current density:  2.000000000000054 [A/m2]
    The determined limiting current density:  299.99999999999983 [A/m2]
 
-'results' includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:
+We can now save the results (the fitted parameters and curve) to a text file:
+
+.. code-block:: python
+
+   >>> Polcurve.save_to_txt(filename = './results_mixed_control_fit')
+
+The tuple 'results' includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:
 
 .. code-block:: python
    
    >>> Polcurve.plotting(output_folder='Visualization_mixed_control_fit')
+
+To obtain more accurate and less subjective results, we can apply a specific weight distribution, defined by the parameters w_ac and W (see Methodology):
+
+.. code-block:: python
+   
+   >>> results = Polcurve.mixed_pol_fit(window=[-0.8,0.3], apply_weight_distribution = True, w_ac = 0.07, W = 80))
+
+To obtain correct values for w_ac and W, we can perform a sensitivity analysis. -- Documentation under progress --
 
 
 

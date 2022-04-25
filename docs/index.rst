@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PolCurveFit's documentation!
+Welcome to polcurvefit's documentation!
 =======================================
 
-The python library pol-curve-fit!!!!! allows the user to analyse measured polarization curves and obtain parameters such as the Tafel slopes, exchange current densities and corrosion rates. It implements three techniques: Tafel extrapolation (linear fit), 'activation control fit' and 'mixed activation-diffusion control fit'. Here you will find information about the working of the different techniques and how to use the library.
+The python library polcurvefit allows the user to analyse measured polarization curves and obtain parameters such as the Tafel slopes, exchange current densities and corrosion rates. It implements three techniques: Tafel extrapolation (linear fit), 'activation control fit' and 'mixed activation-diffusion control fit'. Here you will find information about the working of the different techniques and how to use the library.
 
 .. toctree::
    :maxdepth: 2
@@ -14,6 +14,8 @@ The python library pol-curve-fit!!!!! allows the user to analyse measured polari
 
    source/api/introduction
    source/api/polcurvefit
+   source/api/dataimport
+   
    
 
 .. toctree::

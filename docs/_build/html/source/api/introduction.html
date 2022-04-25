@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="PolCurveFit" href="polcurvefit.html" />
-    <link rel="prev" title="Welcome to PolCurveFit’s documentation!" href="../../index.html" /> 
+    <link rel="prev" title="Welcome to polcurvefit’s documentation!" href="../../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,6 +46,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="polcurvefit.html">PolCurveFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataimport.html">Additional functions, for data import</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting started</span></p>
 <ul>
@@ -94,23 +95,32 @@
 </div>
 <div class="section" id="tafel-extrapolation-linear-fit">
 <h2>Tafel extrapolation (linear fit)<a class="headerlink" href="#tafel-extrapolation-linear-fit" title="Permalink to this headline">¶</a></h2>
-<p>The Tafel extrapolation technique fits a linear line to the polarization curve data within a specified window. The technique is suitable for data that is solely under activation control on the  anodic or on the cathodic branch. This means that only one branch (the cathodic or anodic) can be fitted at a time. If The corrosion potential is given as an input, the fitted Tafel line is extrapolated to also obtain the corrosion current (density).</p>
+<p>The Tafel extrapolation technique fits a linear line to the polarization curve data within a specified window. The technique is suitable for data that is solely under activation control on the  anodic or on the cathodic branch. This means that only one branch (the cathodic or anodic) can be fitted at a time. If The corrosion potential is given as an input, the fitted Tafel line is extrapolated to also obtain the corrosion current (density).
+Finally, one can also obtain the exchange current density, extrapolated from the Tafel slope as well. An input value for the reversible potential of the fitted branch is required in this case.</p>
 <a class="reference internal image-reference" href="../../_images/linear.jpeg"><img alt="Alternative text" src="../../_images/linear.jpeg" style="width: 400px;" /></a>
 </div>
 <div class="section" id="activation-control-fit">
 <h2>Activation control fit<a class="headerlink" href="#activation-control-fit" title="Permalink to this headline">¶</a></h2>
-<p>This technique is suitable to fit currents around the corrosion potential which are under activation control. It fits the following equation to the polarization curve data:</p>
+<p>This technique is suitable to fit currents around the corrosion potential, which are under activation control. It fits the following potential-current density, <span class="math notranslate nohighlight">\(E-i\)</span>, relation to the polarization curve data:</p>
 <div class="math notranslate nohighlight">
 \[i = i_{corr}\left[ \exp\left(\frac{E-E_{corr}}{\beta_{an}}\right)  - \exp\left(\frac{E_{corr}-E}{\beta_{cath}}\right) \right]\]</div>
+<p>where <span class="math notranslate nohighlight">\(i_{corr}\)</span> is the corrosion current density, <span class="math notranslate nohighlight">\(E_corr\)</span> the corrosion potential, <span class="math notranslate nohighlight">\(\beta_{an}\)</span> the anodic Tafel slope and <span class="math notranslate nohighlight">\(\beta_{cath}\)</span> the cathodic Tafel slope.</p>
+<p>The theoretical curve is fitted in a by the user specified window [V vs OCP]. If the fit is not satisfactory, it might be important to give a good initial guess for the corrosion current density.</p>
+<p>Finally, one can also obtain the exchange current densities, extrapolated from the Tafel slopes. Input values for the anodic and cathodic reversible potentials are required in this case.</p>
 <a class="reference internal image-reference" href="../../_images/activation.jpeg"><img alt="Alternative text" src="../../_images/activation.jpeg" style="width: 400px;" /></a>
 </div>
 <div class="section" id="mixed-activation-diffusion-control-fit">
 <h2>Mixed activation-diffusion control fit<a class="headerlink" href="#mixed-activation-diffusion-control-fit" title="Permalink to this headline">¶</a></h2>
-<p>This technique is suitable for polarization curve data of which the cathodic branch is under mixed activation-diffusion control. It fits the following equation to the data:</p>
+<p>This technique is suitable for polarization curve data of which the cathodic branch is under mixed activation-diffusion control. It fits the following potential-current density, <span class="math notranslate nohighlight">\(E-i\)</span>, relation to the polarization curve data:</p>
 <div class="math notranslate nohighlight">
 \[i = i_{corr} * \exp{\frac{2.303(E-E_{corr})}{\beta_{an}}} -  \left[ \frac{\left( i_{corr}\exp{\frac{2.303(E_{corr}-E)}{\beta_{cath}}}\right)^\gamma}{1+\left(\frac{i_{corr}}{i_{L}}\exp{\frac{2.303(E_{corr}-E)}{\beta_{cath}}}\right)^\gamma}              \right]^{\frac{1}{\gamma}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(i_{corr}\)</span> is the corrosion current density, <span class="math notranslate nohighlight">\(E_corr\)</span> the corrosion potential, <span class="math notranslate nohighlight">\(\beta_{an}\)</span> the anodic Tafel slope, <span class="math notranslate nohighlight">\(\beta_{cath}\)</span> the cathodic Tafel slope and <span class="math notranslate nohighlight">\(i_{L}\)</span> the limiting current density.</p>
+<p>The theoretical curve is fitted in a by the user specified window [V vs OCP]. For an accurate fit, it is important that part of the purely diffusion controlled domain (the plateau associated with <span class="math notranslate nohighlight">\(i_{L}\)</span>) is included in the fitted data. If the fit is not satisfactory, it might be important to also give a good initial guess for the corrosion current density and the limiting current density. Alternatively, the function also allows the user to fix the limiting current density at a certain value.</p>
+<p>Finally, one can also obtain the exchange current densities, extrapolated from the Tafel slopes. Input values for the anodic and cathodic reversible potentials are required in this case.</p>
 <a class="reference internal image-reference" href="../../_images/mixed.jpeg"><img alt="Alternative text" src="../../_images/mixed.jpeg" style="width: 400px;" /></a>
-<p>The user also has the obtain the use a specific weight distribution. Explain problem and solution, and explain the parameters. –&gt; Use of sensitivity study.</p>
+<p>The function also includes the option to use a specific weight distribution. In general this weight distribution improves the accuracy of the results and decreases the subjectivity associated with the choice of the measured cathodic range. Meaning, the result becomes independent on the range of the purely diffusion controlled domain (the plateau associated with <span class="math notranslate nohighlight">\(i_{L}\)</span>) included in the fitting.</p>
+<p>The specific weight distribution gives data close to the OCP (in range +/- w_ac [V vs OCP]) a higher weight than data further away from the OCP. The weight is specified as a percentage of the total weight, W [%].</p>
+<p>Finally to obtain good settings for w_ac and W, a sensitivity analysis can be performed. – Documentation in progress –</p>
 </div>
 </div>
 
@@ -118,7 +128,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="Welcome to PolCurveFit’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../index.html" class="btn btn-neutral float-left" title="Welcome to polcurvefit’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="polcurvefit.html" class="btn btn-neutral float-right" title="PolCurveFit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

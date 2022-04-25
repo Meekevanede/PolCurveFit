@@ -6,7 +6,7 @@ In this example, you will see how to apply 'the activation control fit' to your 
 
 .. code-block:: python
    
-   >>> import numpy
+   >>> import numpy as np
    >>> I_corr = 0.002 	# The corrosion current [A]
    >>> E_corr = -0.2 	# The corrosion potential [V vs Ref]
    >>> b_a = 0.08 	# The anodic Tafel slope [V]
@@ -55,7 +55,13 @@ From the plot we can see that currents corresponding to a potential of larger th
    The determined anodic Tafel slope:  0.08000205135784974 [V]
    The determined corrosion current density:  2.0004107350220828 [A/m2]
 
-'results' includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:
+We can now save the results (the fitted parameters and curve) to a text file:
+
+.. code-block:: python
+
+   >>> Polcurve.save_to_txt(filename = './results_activation_control_fit')
+
+The tuple 'results' includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:
 
 .. code-block:: python
    

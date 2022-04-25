@@ -1,32 +1,57 @@
 import numpy as np
 
-# Function to load an example file
+# Functions to load potential curve data
 
-def read_nova(filename):
+def load_txt(filename, lines_header = 0, columns_E_I = [0,1]):
 	"""
-		Function to import data from a nova file (Metrohm autolab)
+		Function to import data from a generic text file, columns separated by space or tab.
 
-		:param filename: path to the data file
+		:param filename: path containing the data file
 		:type filename: string
 
-		:rparam filename: 2 N-length arrays, containing the polarization curve data (E, I)
-		:rtype filename: tuple
-	"""
-	
-    data = np.loadtxt(filename,comments = '#', delimiter = '\t')
-    return data[:,0], data[:,1] 
+		:param lines_header: The number of lines of header information (Default:0) 
+		:type lines_header: int
 
-def read_gamry(filename):
-	"""
-		Function to import data from a gamry file (Gamry potentiostat)
+		:param columns_E_I: The columns containing the potential data E and the current data I. (Default: the first column contains E, second column I,[0,1])
+		:type columns_E_I: 2-length sequence
 
-		:param filename: path to the data file
+		:returns: 2 N-length arrays, containing the polarization curve data (E, I)
+		:rtype: tuple
+	"""
+	data = np.loadtxt(filename, skiprows = lines_header, usecols= (columns_E_I[0],columns_E_I[1]))
+	return data[:,0], data[:,1] 
+
+def load_nova(filename):
+	"""
+		Function to import data from a text file exported by the nova software (Metrohm autolab)
+
+		:param filename: path containing the data file
 		:type filename: string
 
-		:rparam filename: 2 N-length arrays, containing the polarization curve data (E, I)
-		:rtype filename: tuple
+		:returns: 2 N-length arrays, containing the polarization curve data (E, I)
+		:rtype: tuple
+	"""
+	data = np.loadtxt(filename, skiprows = 1, delimiter = ';', usecols = (0,2))
+	return data[:,0], data[:,1] 
+
+def load_gamry(filename):
+	"""
+		Function to import data from a text (DTA format) file exported by gamry software (Gamry)
+
+		:param filename: path containing the data file
+		:type filename: string
+
+		:returns: 2 N-length arrays, containing the polarization curve data (E, I)
+		:rtype: tuple
 	"""
 
-	data = np.loadtxt(filename,comments = '#', delimiter = '\t')
-    return data[:,0], data[:,1]
+	file = open(filename)
+	counter = 1
+	for line in file:
+		if line.startswith("\t#"):
+			break
+		counter += 1
+
+	data = np.loadtxt(filename, skiprows= counter, delimiter = '\t', usecols = (3,4))
+	return data[:,0], data[:,1]
 

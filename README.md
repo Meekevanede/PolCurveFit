@@ -10,34 +10,36 @@ At this moment (testing phase): copy the package (folder polcurvefit), run the e
 When uploaded on Pypi, it can be installed as follows:
 
 ```
-pip install pol-curve-fit
+pip install PolCurveFit
 ```
 
-### Get started
+### Example
 Example of how to apply the code
 
 ```Python
-from polcurvefit import PolCurveFit
 import numpy as np
 
-# upload an example polarization curve
-input_data = np.loadtxt('polcurvefit/data/example_data.txt',comments = '#', delimiter = '\t', usecols=(0, 1))
-E=input_data[:,0]
-I=input_data[:,1]
+# upload an example polarization curve, using the module DataImport
+from polcurvefit import DataImport as di
+inputfile = './polcurvefit/data/example_txt.txt'
+E,I = di.load_txt(inputfile, lines_header = 1)
 
 # Instantiate a polarization curve object
-Polcurve = PolCurveFit(E,I,sample_surface=2.0106E-04)
+from polcurvefit import PolCurveFit
+Polcurve = PolCurveFit(E,I, R= 0, sample_surface=2.0106E-04)
 
 # Apply a fitting technique: 'the activation control fit':
-fitted_curve, E_corr, I_corr, b_a, b_c, RMSE = Polcurve.active_pol_fit(window=[-0.1,0.04], i_corr_guess = 10**-2)
+results = Polcurve.active_pol_fit(window=[-0.05,0])
 
-# Visualise the obtained fit
-Polcurve.plotting(output_folder='Visualization_activation_fit')
+# Save the results and visualise the obtained fit
+Polcurve.save_to_txt(filename = './results/output_act)
+Polcurve.plotting(output_folder='figures/output_act')
 
-# Apply a fitting technique: 'the mixed activation-diffusion control fit':
-fitted_curve, E_corr, I_corr, b_a, b_c, i_L, RMSE, gamma = Polcurve.mixed_pol_fit(window=[-0.4,0.04], i_corr_guess = 10**-2, apply_weight_distribution = True, w_ac = 0.04, W = 85)
+# Apply a fitting technique: 'the mixed activation-diffusion control fit' with a specific weight distribution:
+results = Polcurve.mixed_pol_fit(window=[-0.4,0.1], apply_weight_distribution = True, w_ac = 0.07, W = 80)
 
-# Visualise the obtained fit
-Polcurve.plotting(output_folder='Visualization_mixed_fit')
+# Save the results and visualise the obtained fit
+Polcurve.save_to_txt(filename = './results/output_mixed)
+Polcurve.plotting(output_folder='figures/output_mixed')
 
 ```

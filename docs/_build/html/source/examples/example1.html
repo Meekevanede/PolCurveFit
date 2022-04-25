@@ -13,11 +13,12 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Example 2: Activation control fit" href="example2.html" />
-    <link rel="prev" title="Getting started" href="getting_started.html" /> 
+    <link rel="prev" title="Installation" href="getting_started.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,11 +38,13 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption"><span class="caption-text">Python Class PolCurveFit</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/introduction.html">Methodology</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/polcurvefit.html">PolCurveFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/dataimport.html">Additional functions, for data import</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Installation</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Examples</span></p>
 <ul class="current">
@@ -112,7 +115,11 @@
 <span class="go">The determined corrosion current density:  2.0395128285571236 [A/m2]</span>
 </pre></div>
 </div>
-<p>‘results’ includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:</p>
+<p>We can now save the results (the fitted parameters and curve) to a text file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Polcurve</span><span class="o">.</span><span class="n">save_to_txt</span><span class="p">(</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;./results_Tafel_fit&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The tuple ‘results’ includes also the fitted curve. This can be used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in a specified output folder:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Polcurve</span><span class="o">.</span><span class="n">plotting</span><span class="p">(</span><span class="n">output_folder</span><span class="o">=</span><span class="s1">&#39;Visualization_Tafel_fit&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -122,7 +129,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="example2.html" class="btn btn-neutral float-right" title="Example 2: Activation control fit" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -13,11 +13,12 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Installation" href="../examples/getting_started.html" />
-    <link rel="prev" title="Welcome to PolCurveFit’s documentation!" href="../../index.html" /> 
+    <link rel="next" title="Additional functions, for data import" href="dataimport.html" />
+    <link rel="prev" title="Methodology" href="introduction.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +38,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption"><span class="caption-text">Python Class PolCurveFit</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Methodology</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">PolCurveFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataimport.html">Additional functions, for data import</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Getting started</span></p>
 <ul>
@@ -94,7 +97,7 @@ Tafel slopes, corrosion current density and exchange current densities. The data
 </dl>
 <dl class="method">
 <dt id="polcurvefit.PolCurveFit.active_pol_fit">
-<code class="descname">active_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.00788860117618554</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.active_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.active_pol_fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">active_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=None</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.active_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.active_pol_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fitting of a theoretical description, representative for the anodic and cathodic activation controlled currents around the Corrosion potential (OCP).
 This option is suitable for data of which the anodic and cathodic branches are solely under activation control.</p>
 <dl class="field-list simple">
@@ -152,10 +155,10 @@ the returned I_corr relects the corrosion rate.</p>
 
 <dl class="method">
 <dt id="polcurvefit.PolCurveFit.mixed_pol_fit">
-<code class="descname">mixed_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=0.00788860117618554</em>, <em>i_L_guess=12.676518658578456</em>, <em>fix_i_L=False</em>, <em>apply_weight_distribution=False</em>, <em>w_ac=0.04</em>, <em>W=75</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.mixed_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.mixed_pol_fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mixed_pol_fit</code><span class="sig-paren">(</span><em>window</em>, <em>i_corr_guess=None</em>, <em>i_L_guess=None</em>, <em>fix_i_L=False</em>, <em>apply_weight_distribution=False</em>, <em>w_ac=0.04</em>, <em>W=75</em>, <em>obtain_io=False</em>, <em>E_rev_an=0</em>, <em>E_rev_cath=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.mixed_pol_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.mixed_pol_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fitting of a theoretical description, representative for the anodic activation controlled currents and cathodic mixed activation-diffusion controlled currents.
 This option is suitable for data of which the anodic is under activation control and the cathodic branche are under mixed activation-diffusion control.
-Describe the weight distribution !!!!!!</p>
+To obtain more accurate and less subjective fit, a specific weight distribution can be applied (see Documentation)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -204,6 +207,18 @@ results_overview: plot of the observed data and the obtained Tafel slope(s) (and
 </dd></dl>
 
 <dl class="method">
+<dt id="polcurvefit.PolCurveFit.save_to_txt">
+<code class="descname">save_to_txt</code><span class="sig-paren">(</span><em>filename='./fitting_results'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.save_to_txt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.save_to_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saving of the results obtained from the fitting in a text file. It lists the fitting technique used, the fitted parameters, and 
+the corresponding fitted curve</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> – path and name of the output file (Default: ‘./fitting_results’)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="polcurvefit.PolCurveFit.sens_analysis">
 <code class="descname">sens_analysis</code><span class="sig-paren">(</span><em>window, start_diffusion_control, importance=[50, 70, 80, 90, 0], i_corr_guess=0.01, i_L_guess=10, fix_i_L=False, output_folder='sensitivity_analysis'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/polcurvefit/polcurvefit.html#PolCurveFit.sens_analysis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polcurvefit.PolCurveFit.sens_analysis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sensitivity analysis of the ‘mixed activation-diffusion control fit’ to the set parameters for the weight distribution.
@@ -241,8 +256,8 @@ The 5 plots are safed in different folders in the output_folder</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../../index.html" class="btn btn-neutral float-left" title="Welcome to PolCurveFit’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../examples/getting_started.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="introduction.html" class="btn btn-neutral float-left" title="Methodology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataimport.html" class="btn btn-neutral float-right" title="Additional functions, for data import" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -53,7 +53,13 @@ From the plot we can see that if we would like the cathodic Tafel slope, we shou
    The determined Tafel slope:  -0.1819774491837005 [V]
    The determined corrosion current density:  2.0395128285571236 [A/m2]
 
-'results' includes also the fitted curve. This can used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in the specified output folder:
+We can now save the results (the fitted parameters and curve) to a text file:
+
+.. code-block:: python
+
+   >>> Polcurve.save_to_txt(filename = './results_Tafel_fit')
+
+The tuple 'results' includes also the fitted curve. This can be used to manually visualise the results. However, this can  also be automatically done by using the following function, which saves the figures in a specified output folder:
 
 .. code-block:: python
    
