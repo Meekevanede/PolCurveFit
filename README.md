@@ -13,6 +13,9 @@ When uploaded on Pypi, it can be installed as follows:
 pip install PolCurveFit
 ```
 
+### Documentation
+Find the documentation on: https://polcurvefit.readthedocs.io/
+
 ### Example
 Example of how to apply the code
 
