@@ -73,6 +73,9 @@ class PolCurveFit:
 		self.w_ac = None
 		self.W = None
 		self.apply_W = None
+		self.start_diffusion_control = None
+		self.window_sens = None
+		self.df_sens = None
 
 	def __str__(self):
 		return str(self.__class__) + ": " + str(self.__dict__)
@@ -276,7 +279,6 @@ class PolCurveFit:
 		
 		if i_L_guess == None:
 			i_L_guess = np.mean(self.i)
-	
 
 		# check input 
 		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()) and i_corr_guess!= 10**-2.103:
@@ -343,22 +345,22 @@ class PolCurveFit:
 ########################### Sensitivity analysis #############################
 ##############################################################################
 
-	def sens_analysis(self, window, start_diffusion_control, importance = [50,70,80,90,0], i_corr_guess = 10**-2, i_L_guess = 10**1, fix_i_L = False, output_folder='sensitivity_analysis'):
+	def sens_analysis(self, window, start_diffusion_control, W = np.append(np.arange(50,100,5),[0]), w_ac = None, i_corr_guess = None, i_L_guess = None, fix_i_L = False, output_folder='sensitivity_analysis'):
 		
 		"""
-		Sensitivity analysis of the 'mixed activation-diffusion control fit' to the set parameters for the weight distribution.
-		It returns 5 plots, showing the effect of the importance & w_acon on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).
-		The 5 plots are safed in different folders in the output_folder
-
+		Sensitivity analysis of the 'mixed activation-diffusion control fit' to the set parameters, W and w_ac, for the weight distribution. The goal of this function is to find the parameters that produce most stable results vs the cathodic window.
 		
 		:param window: Lower and upper bounds of the total data to be taken into account in the analysis, relative to the corrosion potential [min value, max value], units [V vs E_corr] 
 		:type window: 2-length sequence
 
-		:param start_diffusion_control: (An estimation of)the potential versus the corrosion potential (E_corr) at which the diffusion controlled domain starts [V vs E_corr]
+		:param start_diffusion_control: (An estimation of) the potential versus the corrosion potential (E_corr) at which the diffusion controlled domain starts [V vs E_corr]
 		:type start_diffusion_control: float
 
-		:param importance: array contaning a number M of different values for importance [%] to take into account in the analysis. An importance of 0% equals the case where no weight distribution is applied. (Default: [50,70,80,90,0])
-		:type importance: M-length sequence
+		:param W: array contaning a number M of different values for the weight percentage, W [%], to take into account in the visualization. A W of 0% equals the case where no weight distribution is applied. (Default: [50 55 60 65 70 75 80 85 90 95 0])
+		:type W: M-length sequence
+
+		:param w_ac: array contaning a number N of different values for the window activation control, w_ac [V vs OCP], to take into account in the visualization. (Default: 0.01 --> start_diffusion_control, increment of 0.01)
+		:type w_ac: N-length sequence
 		
 		:param i_corr_guess: First guess of (the order of magnitude of) the corrosion current density (optional) [A/surface area], it might lead to faster convergence (Default: 10^-2).
 		:type i_corr_guess: float
@@ -369,79 +371,160 @@ class PolCurveFit:
 		:param fix_i_L: If True, the limiting current density is fixed at the value of i_L_guess. (Default:False)
 		:type fix_i_L: bool
 
-		:param output_foler: The main output directory in which the 5 directories with figures will be saved (Default:'sensitivity_analysis')
+		:param output_foler: The main output directory in which the the results will be saved (Default:'sensitivity_analysis')
+		:type output_folder: string
+		
+		:returns:
+			- results_sensitivity_analysis.txt: text file containing the results of the sensitivity analyses, the obtained cathodic Tafel slope and i_L for every evaluated compbination of W, w_ac and window cathodic.
+			- stability_W.jpeg: Mean standard deviation of the cathodic Tafel slope data with cathodic window larger than start_diffusion_control for varying w_ac, as a function of W.
+			- stability_wac: Folder containing figures of the standard deviation of the cathodic Tafel slope data with cathodic window larger than start_diffusion_control as a function for w_ac, for different W.
+		"""
+
+		# making directory
+		try:
+			os.makedirs(output_folder + '/stability_wac')
+		except:
+			warnings.warn("Output folder exists - files might be overwritten")
+
+		# Initializing ranges for parameter search
+		self.start_diffusion_control = start_diffusion_control
+		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, window, start_diffusion_control)
+
+		# Initializing panda data frame
+		df = pd.DataFrame(data={'w_ac': [],
+	                      		'W': [],
+	                      		'window_cat': [],
+	                      		'b_c': [],
+								'i_L': []})
+
+		# Obtaining cathodic tafel slopes, b_c, and limiting current densities, i_L - parameter search
+		timer = 0
+		for w_ac in w_ac_:
+			print('In progress, completed:',round((len(w_ac_)-(len(w_ac_)-timer))/len(w_ac_)*100,2),'%', end='\r')
+			for W in W_:
+				for window_cat in window_cat_:
+					if -w_ac>window_cat:
+						try:
+							if W == 0:
+								result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = False)
+							else:
+								result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = True, w_ac = w_ac, W = W)
+							df_temp = pd.DataFrame(data={'w_ac': [w_ac],
+								                         'W': [W],
+								                         'window_cat': [window_cat],
+								                         'b_c': [result[4]], 
+								                         'i_L': [result[5]]})
+							df = df.append(df_temp, ignore_index=True)
+						except: 
+							print("No fit found for W = ", W, ", w_ac = ", w_ac, "and cathodic window = ", window_cat,". Combination skipped.")
+			timer += 1
+		print('In progress, completed:',100.0,'%')
+
+		self.df_sens = df
+		self.window_sens = window
+
+		# write df to output file
+		df.to_csv(output_folder + '/results_sensitivity_analysis.txt', sep = '\t', float_format = '%.4g', index=False)
+
+		# Obtain 'stability', quantified by the standard deviation of the data for varying window_cat>start_diffusion_control
+		df_std = pd.DataFrame(data={'w_ac':[],
+			                        'W': [],
+			                        'std_dev': []})
+		for w_ac in w_ac_:
+			for W in W_:
+				deviation = df.loc[(df['window_cat']<start_diffusion_control) & (df['w_ac'] == w_ac) & (df['W'] == W)]['b_c'].std()
+				df_std = df_std.append(pd.DataFrame(data={'w_ac':[w_ac],'W': [W],'std_dev': [deviation]}))
+
+		# Plot standard deviation as a function of W and w_ac
+		fig,ax = plt.subplots(figsize=(6, 5))
+		mean_ = []
+		deviation_ = []
+		for W in W_:
+			if W == 0:
+				plt.scatter(W,df_std.loc[df_std['W']== W]['std_dev'].mean(), s = 200, c = '#000000', marker = '*')
+			else:
+				mean_.append(df_std.loc[df_std['W']== W]['std_dev'].mean())
+				deviation_.append(df_std.loc[df_std['W']== W]['std_dev'].std())
+		W_ = W_[W_ != 0]
+		plt.errorbar(W_, mean_,  yerr=deviation_,fmt='.k',  capsize = 2, linewidth=2, elinewidth=1)
+		plt.plot(W_, mean_,'-ko')
+		plt.xlabel('W [%]')
+		plt.ylabel('Standard deviation')
+		plt.tight_layout()
+		fig.savefig(output_folder +'/stability_W.jpeg', format='jpeg', dpi=1000)
+
+		for W in W_:
+			plt.close('all')
+			fig,ax = plt.subplots(figsize=(6, 5))
+			value_array = []
+			for w_ac in w_ac_:
+			    value_array.append(df_std.loc[(df_std['w_ac']== w_ac) &(df_std['W']== W)]['std_dev'])
+			plt.plot(w_ac_, value_array, '-ko')
+			plt.xlabel('w_ac [V]')
+			plt.ylabel('Standard deviation')
+			plt.title('W = ' + str(W))
+			plt.tight_layout()
+			fig.savefig(output_folder +'/stability_wac/W='+'%.1f' % W+'.jpeg', format='jpeg', dpi=1000)
+
+	def plotting_sens_analysis(self, W = np.append(np.arange(50,100,5),[0]), w_ac = None, output_folder = 'sensitivity_analysis'):
+		
+		"""
+		It returns 5 plots, visualizing the results of the sensitivity analysis: showing the effect of W & w_ac on on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).
+		The 5 plots are safed in different folders in the output_folder
+		
+		:param W: array contaning a number M of different values for the weight percentage, W [%], to take into account in the visualization. A W of 0% equals the case where no weight distribution is applied. (Default: [50 55 60 65 70 75 80 85 90 95 0])
+		:type W: M-length sequence
+
+		:param w_ac: array contaning a number N of different values for the window activation control, w_ac [V vs OCP], to take into account in the visualization. (Default: 0.01 --> start_diffusion_control, increment of 0.01)
+		:type w_ac: N-length sequence
+		
+		:param output_folder: The main output directory in which the 5 directories with figures will be saved (Default:'sensitivity_analysis')
 		:type output_folder: string
 
 		:return 5 figures:
-			- effect_importance: The effect of the importance on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)
-			- effect_importance_fluctuation: The effect of the importance on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)
-			- effect_importance_il: The effect of the importance on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)
-			- effect_window_act_control: The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different importance)
-			- effect_window_act_control_fluctuation: The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different importance)
+			- effect_W: The effect of the W on the cathodic Tafel slope b_cath, as a function of the cathodic window (plotted for different w_ac)
+			- effect_W_fluctuation: The effect of the W on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different w_ac)
+			- effect_W_il: The effect of the W on the limiting current density i_L, as a function of the cathodic window (plotted for different w_ac)
+			- effect_window_act_control: The effect of w_ac on b_cath, as a function of the cathodic window (plotted for different W)
+			- effect_window_act_control_fluctuation: The effect of w_ac on the change in b_cath in respect to the mean of the previous 100 mV of smaller absolute cathodic windows (plotted for different W)
+	
 		"""
-
-		# Initializing parameter search
-		window_cat_ = np.arange(-0.020, window[0]-0.010, -0.010)
-		w_ac_ = np.arange(0.010,abs(start_diffusion_control)+0.010,0.010)
-		importance_ = importance
-
-		# Initializing panda data frame
-		df = pd.DataFrame(data={'b_c_best': [],
-								'i_L_best': [],
-	                       		'window_cat':[], 
-	                      		'w_ac': [],
-	                      		'importance':[]})
-
-		# Obtaining fitting results - parameter search
-		for window_cat in window_cat_:
-			for w_ac in w_ac_:
-				for importance in importance_:
-					if -w_ac>window_cat:
-						if importance == 0:
-							temp_result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = False)
-						else:
-							temp_result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = True, w_ac = w_ac, W = importance)
-						df_temp = pd.DataFrame(data={'b_c_best': [temp_result[4]], 
-							                         'i_L_best':[temp_result[5]],
-							                         'window_cat':[window_cat], 
-							                         'w_ac': [w_ac],
-							                         'importance':[importance]})
-						df = df.append(df_temp, ignore_index=True)
-
-		# plotting
-
+		
 		# making the directories
 		try:
-			os.makedirs(output_folder+'/effect_importance_il')
-			os.makedirs(output_folder+'/effect_importance')
-			os.makedirs(output_folder+'/effect_importance_fluctuation')
+			os.makedirs(output_folder+'/effect_W_il')
+			os.makedirs(output_folder+'/effect_W')
+			os.makedirs(output_folder+'/effect_W_fluctuation')
 			os.makedirs(output_folder+'/effect_window_act_control')
 			os.makedirs(output_folder+'/effect_window_act_control_fluctuation')
 
 		except:
-			print('Warning: Output folder(s) exist(s) - plots will be overwritten')
-		
-		# plot 1: effect_importance
-		for w_ac in w_ac_:
-			self._plot_effect_W(df,w_ac,importance_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_importance/wac=',fluctuation=False)
+			warnings.warn('Output folder(s) exist(s) - plots will be overwritten')
 
-		# plot 2: effect_importance_fluctuation
-		for w_ac in w_ac_:
-			self._plot_effect_W(df,w_ac,importance_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder + '/effect_importance_fluctuation/wac=',fluctuation=True)
+		# Initializing ranges for parameter search
+		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, self.window_sens, self.start_diffusion_control)
 
-		# plot 3: effect_importance_il
+		# plot 1: effect_W
 		for w_ac in w_ac_:
-			self._plot_effect_W(df,w_ac,importance_,'i_L_best',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_importance_il/wac=',fluctuation=False)
+			self._plot_effect_W(self.df_sens,w_ac,W_,'b_c',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_W/wac=',fluctuation=False)
+
+		# plot 2: effect_W_fluctuation
+		for w_ac in w_ac_:
+			self._plot_effect_W(self.df_sens,w_ac,W_,'b_c',r'relative change of $\beta_{cath}$ [V/dec]',output_folder + '/effect_W_fluctuation/wac=',fluctuation=True)
+
+		# plot 3: effect_W_il
+		for w_ac in w_ac_:
+			self._plot_effect_W(self.df_sens,w_ac,W_,'i_L',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_W_il/wac=',fluctuation=False)
 
 		# plot 4: effect_window_act_control
-		for importance in importance_:
-			if importance != 0:
-				self.__plot_effect_Wac(df,importance,w_ac_,'b_c_best',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control/W=',fluctuation=False)
+		for W in W_:
+			if W != 0:
+				self._plot_effect_Wac(self.df_sens,W,w_ac_,'b_c',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control/W=',fluctuation=False)
 			
 		# plot 5: effect_window_act_control_fluctuation
-		for importance in importance_:
-			if importance != 0:
-				self.__plot_effect_Wac(df,importance,w_ac_,'b_c_best',r'relative change of $\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control_fluctuation/W=',fluctuation=True)
+		for W in W_:
+			if W != 0:
+				self._plot_effect_Wac(self.df_sens,W,w_ac_,'b_c',r'relative change of $\beta_{cath}$ [V/dec]',output_folder+'/effect_window_act_control_fluctuation/W=',fluctuation=True)
 			
 ############################## Plotting ######################################
 ##############################################################################
@@ -621,22 +704,22 @@ class PolCurveFit:
 		return new_cmap
 
 	# function for plotting, dependency of W
-	def _plot_effect_W(self,df,w_ac,importance_,param,ylabel,output_folder,fluctuation=False):
+	def _plot_effect_W(self,df,w_ac,W_,param,ylabel,output_folder,fluctuation=False):
 		plt.close('all')
 		fig,ax = plt.subplots(figsize=(10, 5))
-		for importance in importance_:				
+		for W in W_:				
 			df_select = df.loc[df['w_ac'] == w_ac]
-			df_select = df_select.loc[df_select['importance']== importance]
+			df_select = df_select.loc[df_select['W']== W]
 			x = df_select['window_cat'].to_numpy()
 			y = df_select[param].to_numpy()
 
 			if fluctuation:	
 				y = self._get_fluc(y)
 
-			if importance == 0:
+			if W == 0:
 				plt.plot(x,y,'-k', label = 'not weighted')
 			else:
-				plt.plot(x,y, label = 'W = '+ str(importance) +' %')
+				plt.plot(x,y, label = 'W = '+ str(W) +' %')
 
 			if param == 'i_L_best':
 				plt.yscale('log')
@@ -648,7 +731,7 @@ class PolCurveFit:
 		fig.savefig(output_folder +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
 
 	# function for plotting, dependency on w_ac
-	def _plot_effect_Wac(self,df,importance,w_ac_,param,ylabel,output_folder,fluctuation=False):
+	def _plot_effect_Wac(self,df,W,w_ac_,param,ylabel,output_folder,fluctuation=False):
 		# defining colorscale 
 		colors = plt.cm.Reds(np.linspace(0.2, 1.0, len(w_ac_)))
 		plt.close('all')
@@ -656,7 +739,7 @@ class PolCurveFit:
 		i = 0
 		for w_ac in w_ac_:
 			df_select = df.loc[df['w_ac'] == w_ac]	
-			df_select = df_select.loc[df_select['importance'] == importance]
+			df_select = df_select.loc[df_select['W'] == W]
 			x = df_select['window_cat'].to_numpy()
 			y = df_select[param].to_numpy()
 			
@@ -666,7 +749,7 @@ class PolCurveFit:
 			plt.plot(x,y, color=colors[i], label = str(w_ac))
 			i+=1
 
-		df_select_notweighted = df.loc[(df['importance']==0) & (df['w_ac']==0.01)]
+		df_select_notweighted = df.loc[(df['W']==0) & (df['w_ac']==0.01)]
 		if fluctuation:
 			plt.plot(df_select_notweighted['window_cat'].to_numpy(),self._get_fluc(df_select_notweighted[param].to_numpy()), '--k')
 		else:
@@ -676,12 +759,30 @@ class PolCurveFit:
 		plt.ylabel(ylabel)
 		plt.xlabel('cathodic window [V from OCP]')
 		plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
-		plt.title('Weight (W) = ' + str(importance)+'%')
-		fig.savefig(output_folder+str(importance)+'.jpeg', format='jpeg', dpi=1000)
+		plt.title('Weight (W) = ' + str(W)+'%')
+		fig.savefig(output_folder+str(W)+'.jpeg', format='jpeg', dpi=1000)
 
 
-	
+	# function to define and check ranges for parameter search
+	def _param_ranges(self, W, w_ac, window, start_diffusion_control):
+		
+		# Initializing ranges parameter search
+		W_ = np.array(W)
 
+		if w_ac == None:
+			w_ac_ = np.arange(0.010,round(abs(start_diffusion_control)+0.010,2),0.010)
+		else:
+			w_ac_ = np.array(w_ac)
+		
+		window_cat_ = np.arange(-0.020, round(window[0]-0.010,2), -0.010)
+
+		# Check input values and ranges
+		if np.any(( W_< 0)|(W_ > 100)):
+			raise ValueError("Values for W should be in the range of  0-100 %")
+		if np.any(w_ac_ < 0):
+			raise ValueError("Values for w_ac should be larger than 0")
+
+		return W_, w_ac_, window_cat_
 	
 	
 
