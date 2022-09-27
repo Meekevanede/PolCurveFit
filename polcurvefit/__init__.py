@@ -1,1 +1,1 @@
-from polcurvefit.polcurvefit import PolCurveFit
+from PolCurveFit.polcurvefit import polcurvefit

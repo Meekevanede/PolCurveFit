@@ -3,14 +3,14 @@ import numpy as np
 import pandas as pd
 import math
 from scipy.optimize import curve_fit
-from polcurvefit.forward import *
+from PolCurveFit.forward import *
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 import matplotlib as mpl
 import matplotlib.colors as colours
 import warnings
 
-class PolCurveFit:
+class polcurvefit:
 	
 	"""
 	PolCurveFit is a python class that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
@@ -349,7 +349,7 @@ class PolCurveFit:
 ########################### Sensitivity analysis #############################
 ##############################################################################
 
-	def sens_analysis(self, window, w_dc, W = np.append(np.arange(50,100,5),[0]), w_ac = None, i_corr_guess = None, i_L_guess = None, fix_i_L = False, output_folder='sensitivity_analysis'):
+	def sens_analysis(self, window, w_dc, dw_c = 0.01, dw_ac = 0.01, W = np.append(np.arange(50,100,5),[0]), w_c = None, w_ac = None, i_corr_guess = None, i_L_guess = None, fix_i_L = False, output_folder='sensitivity_analysis'):
 		
 		"""
 		Sensitivity analysis of the 'mixed activation-diffusion control fit' to the set parameters, W and w_ac, for the weight distribution. The goal of this function is to find the parameters that produce most stable results vs the cathodic window.
@@ -386,8 +386,11 @@ class PolCurveFit:
 		"""
 
 		# Check input values
-		if self.w_dc > 0:
+		if w_dc > 0:
 			raise ValueError("w_dc, the start of the diffusion controlled domain should be negative [V vs E_corr]")
+
+		if dw_c < 0:
+			raise ValueError("dw_c, the increment of the sweep of the cathodic window should be positive [V]")
 
 		# obtaining automatic guesses for i_icorr and i_L
 		if i_corr_guess == None:
@@ -404,13 +407,13 @@ class PolCurveFit:
 
 		# making directory
 		try:
-			os.makedirs(output_folder + '/stability_wac')
+			os.makedirs(output_folder + '/variability_wac')
 		except:
 			warnings.warn("Output folder exists - files might be overwritten")
 
 		# Initializing ranges for parameter search
 		self.w_dc = w_dc
-		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, window, w_dc)
+		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, w_c, window, w_dc, dw_c, dw_ac)
 
 		# Initializing panda data frame
 		df = pd.DataFrame(data={'w_ac': [],
@@ -422,7 +425,7 @@ class PolCurveFit:
 		# Obtaining cathodic tafel slopes, b_c, and limiting current densities, i_L - parameter search
 		timer = 0
 		for w_ac in w_ac_:
-			print('In progress, completed:',round((len(w_ac_)-(len(w_ac_)-timer))/len(w_ac_)*100,2),'%       ', end='\r')
+			print('Multi-parameter-sweep in progress, completed:',round((len(w_ac_)-(len(w_ac_)-timer))/len(w_ac_)*100,2),'%       ', end='\r')
 			for W in W_:
 				for window_cat in window_cat_:
 					if -w_ac>window_cat:
@@ -440,7 +443,7 @@ class PolCurveFit:
 						except: 
 							print("No fit found for W = ", W, ", w_ac = ", w_ac, "and cathodic window = ", window_cat,". Combination skipped.")
 			timer += 1
-		print('In progress, completed:',100.0,'%       ')
+		print('Multi-parameter-sweep in progress, completed:',100.0,'%       ')
 
 		self.df_sens = df
 		self.window_sens = window
@@ -449,7 +452,7 @@ class PolCurveFit:
 		df.to_csv(output_folder + '/fitted_parameters.txt', sep = '\t', float_format = '%.4g', index=False)
 
 
-		# Obtain 'stability', quantified by the standard deviation of the data for varying window_cat>w_dc
+		# Obtain 'variabilit', quantified by the standard deviation of the data for varying window_cat>w_dc
 		df_std = pd.DataFrame(data={'w_ac':[],
 			                        'W': [],
 			                        'std_dev': []})
@@ -461,7 +464,7 @@ class PolCurveFit:
 		self.df_sens_std = df_std
 
 		# write df_std to output file
-		df.to_csv(output_folder + '/stability.txt', sep = '\t', float_format = '%.4g', index=False)
+		df.to_csv(output_folder + '/variability.txt', sep = '\t', float_format = '%.4g', index=False)
 
 		# Plot standard deviation as a function of W and w_ac
 		fig,ax = plt.subplots(figsize=(6, 5))
@@ -477,9 +480,9 @@ class PolCurveFit:
 		plt.errorbar(W_, mean_,  yerr=deviation_,fmt='.k',  capsize = 2, linewidth=2, elinewidth=1)
 		plt.plot(W_, mean_,'-ko')
 		plt.xlabel('W [%]')
-		plt.ylabel('Standard deviation')
+		plt.ylabel(r'mean variability, $\overline{\sigma^{W}(w_{ac})}$')
 		plt.tight_layout()
-		fig.savefig(output_folder +'/stability_W.jpeg', format='jpeg', dpi=1000)
+		fig.savefig(output_folder +'/variability_W.jpeg', format='jpeg', dpi=1000)
 
 		for W in W_:
 			plt.close('all')
@@ -488,13 +491,13 @@ class PolCurveFit:
 			for w_ac in w_ac_:
 			    value_array.append(df_std.loc[(df_std['w_ac']== w_ac) &(df_std['W']== W)]['std_dev'])
 			plt.plot(w_ac_, value_array, '-ko')
-			plt.xlabel('w_ac [V]')
-			plt.ylabel('Standard deviation')
+			plt.xlabel(r'$w_{ac}$ [V]')
+			plt.ylabel(r'variability, $\sigma^{W}(w_{ac})$')
 			plt.title('W = ' + str(W))
 			plt.tight_layout()
-			fig.savefig(output_folder +'/stability_wac/W='+'%.1f' % W+'.jpeg', format='jpeg', dpi=1000)
+			fig.savefig(output_folder +'/variability_wac/W='+'%.1f' % W+'.jpeg', format='jpeg', dpi=1000)
 
-	def plotting_sens_analysis(self, W = np.append(np.arange(50,100,5),[0]), w_ac = None, output_folder = 'sensitivity_analysis'):
+	def plotting_sens_analysis(self, dw_c = 0.01, dw_ac = 0.01,  W = np.append(np.arange(50,100,5),[0]), w_ac = None, w_c = None, output_folder = 'sensitivity_analysis'):
 		
 		"""
 		It returns 3 plots, visualizing the results of the sensitivity analysis: showing the effect of W & w_ac on on i_L and b_cath as a function of the amount of the cathodic branch taken into account in the fitting (cathodic window).
@@ -516,7 +519,7 @@ class PolCurveFit:
 		"""
 		
 		# Check input values
-		if self.df_sens == None:
+		if isinstance(self.df_sens, pd.DataFrame) == False:
 			raise ValueError("No results found of the sensitivity analysis.")
 
 		# making the directories
@@ -529,20 +532,20 @@ class PolCurveFit:
 			warnings.warn('Output folder(s) exist(s) - plots will be overwritten')
 
 		# Initializing ranges for parameter search
-		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, self.window_sens, self.w_dc)
+		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, w_c, self.window_sens, self.w_dc, dw_c, dw_ac)
 
 		# plot 1: effect_W
 		for w_ac in w_ac_:
-			self._plot_effect_W(self.df_sens,w_ac,W_,'b_c',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_W/wac=',fluctuation=False)
+			self._plot_effect_W(self.df_sens,w_ac,W_,'b_c',r'$\beta_{cath}$ [V/dec]',output_folder + '/effect_W/wac=')
 
 		# plot 2: effect_W_il
 		for w_ac in w_ac_:
-			self._plot_effect_W(self.df_sens,w_ac,W_,'i_L',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_W_il/wac=',fluctuation=False)
+			self._plot_effect_W(self.df_sens,w_ac,W_,'i_L',r'$i_{L}$ [A/m$^2$]',output_folder + '/effect_W_il/wac=')
 
 		# plot 3: effect_window_act_control
 		for W in W_:
 			if W != 0:
-				self._plot_effect_Wac(self.df_sens,W,w_ac_,'b_c',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_wac/W=',fluctuation=False)
+				self._plot_effect_Wac(self.df_sens,W,w_ac_,'b_c',r'$\beta_{cath}$ [V/dec]',output_folder+'/effect_wac/W=')
 						
 ############################## Plotting ######################################
 ##############################################################################
@@ -732,7 +735,7 @@ class PolCurveFit:
 		return new_cmap
 
 	# function for plotting, dependency of W
-	def _plot_effect_W(self,df,w_ac,W_,param,ylabel,output_folder,fluctuation=False):
+	def _plot_effect_W(self,df,w_ac,W_,param,ylabel,output_folder):
 		plt.close('all')
 		fig,ax = plt.subplots(figsize=(10, 5))
 		for W in W_:				
@@ -749,14 +752,14 @@ class PolCurveFit:
 			if param == 'i_L_best':
 				plt.yscale('log')
 		plt.ylabel(ylabel)
-		plt.xlabel('cathodic window [V from OCP]')
+		plt.xlabel(r'cathodic window $w_{c}$ [V from $E_{corr}$]')
 		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-		plt.title('window activation control = ' + '%.2f' % w_ac + ' mV')
+		plt.title(r'window activation control $w_{ac}$ = ' + '%.2f' % w_ac + ' V')
 		plt.tight_layout()
 		fig.savefig(output_folder +'%.2f' % w_ac+'.jpeg', format='jpeg', dpi=1000)
 
 	# function for plotting, dependency on w_ac
-	def _plot_effect_Wac(self,df,W,w_ac_,param,ylabel,output_folder,fluctuation=False):
+	def _plot_effect_Wac(self,df,W,w_ac_,param,ylabel,output_folder):
 		# defining colorscale 
 		colors = plt.cm.Reds(np.linspace(0.2, 1.0, len(w_ac_)))
 		plt.close('all')
@@ -775,24 +778,27 @@ class PolCurveFit:
 		cmap=self._truncate_colormap(plt.get_cmap('Reds'), 0.2, 1.0)
 		norm = mpl.colors.Normalize(vmin=w_ac_.min(),vmax=w_ac_.max())
 		plt.ylabel(ylabel)
-		plt.xlabel('cathodic window [V from OCP]')
+		plt.xlabel(r'cathodic window $w_{c}$ [V from $E_{corr}$]')
 		plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),label=r'w$_{ac}$ [V]')
 		plt.title('Weight (W) = ' + str(W)+'%')
 		fig.savefig(output_folder+str(W)+'.jpeg', format='jpeg', dpi=1000)
 
 
 	# function to define and check ranges for parameter search
-	def _param_ranges(self, W, w_ac, window, w_dc):
+	def _param_ranges(self, W, w_ac, w_c, window, w_dc, dw_c, dw_ac):
 		
 		# Initializing ranges parameter search
 		W_ = np.array(W)
 
 		if w_ac == None:
-			w_ac_ = np.arange(0.010,round(abs(w_dc)+0.010,2),0.010)
+			w_ac_ = np.arange(dw_ac,round(abs(0.5*w_dc)+dw_ac,2),dw_ac)
 		else:
 			w_ac_ = np.array(w_ac)
 		
-		window_cat_ = np.arange(-0.020, round(window[0]-0.010,2), -0.010)
+		if w_c == None:
+			w_c_ = np.arange(w_dc, round(window[0]-dw_c,2), -dw_c)
+		else:
+			w_c_ = np.array(w_c)
 
 		# Check input values and ranges
 		if np.any(( W_< 0)|(W_ > 100)):
@@ -800,7 +806,7 @@ class PolCurveFit:
 		if np.any(w_ac_ < 0):
 			raise ValueError("Values for w_ac should be larger than 0")
 
-		return W_, w_ac_, window_cat_
+		return W_, w_ac_, w_c_
 	
 	
 
