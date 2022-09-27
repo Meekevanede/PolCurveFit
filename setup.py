@@ -30,7 +30,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent"
     ],
-    packages=["polcurvefit"],
+    packages=["PolCurveFit"],
     include_package_data=True,
     package_data={'': ['data/*.txt']},
     install_requires=["numpy","scipy","matplotlib","pandas"] 

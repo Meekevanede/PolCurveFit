@@ -5,9 +5,6 @@ Activation control fit: fitting of a theoretical curve describing the anodic and
 Mixed activation-diffusion control fit: fitting of a theoretical curve describing an anodic domain with solely activation controlled currents and a cathodic domain with (mixed) activation and diffusion controlled currents
 
 ### Installation
-At this moment (testing phase): copy the package (folder polcurvefit), run the example code below in the same folder as where the package (folder polcurvefit) is located. 
-
-When uploaded on Pypi, it can be installed as follows:
 
 ```
 pip install PolCurveFit
@@ -28,8 +25,8 @@ inputfile = './PolCurveFit/data/example_txt.txt'
 E,I = di.load_txt(inputfile, lines_header = 1)
 
 # Instantiate a polarization curve object
-from PolCurveFit import polcurvefit as pcf
-Polcurve = pcf(E,I, R= 0, sample_surface=2.0106E-04)
+from PolCurveFit import polcurvefit
+Polcurve = polcurvefit(E,I, R= 0, sample_surface=2.0106E-04)
 
 # Apply a fitting technique: 'the activation control fit':
 results = Polcurve.active_pol_fit(window=[-0.05,0])
