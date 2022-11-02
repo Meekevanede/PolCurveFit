@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 from scipy.optimize import curve_fit
-from PolCurveFit.forward import *
+from polcurvefit.forward import *
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 import matplotlib as mpl

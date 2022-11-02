@@ -20,12 +20,12 @@ Example of how to apply the code
 import numpy as np
 
 # upload an example polarization curve, using the module DataImport
-from PolCurveFit import DataImport as di
+from polcurvefit import DataImport as di
 inputfile = './PolCurveFit/data/example_txt.txt'
 E,I = di.load_txt(inputfile, lines_header = 1)
 
 # Instantiate a polarization curve object
-from PolCurveFit import polcurvefit
+from polcurvefit import polcurvefit
 Polcurve = polcurvefit(E,I, R= 0, sample_surface=2.0106E-04)
 
 # Apply a fitting technique: 'the activation control fit':
