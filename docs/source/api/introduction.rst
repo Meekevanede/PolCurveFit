@@ -4,7 +4,7 @@ Methodology
 
 PolCurveFit implements three different fitting techniques: Tafel extrapolation (linear fit), activation control fit & mixed activation-diffusion control fit. These techniques fit a theoretical curve to the polarization curve data. Below a short overview overview of the used theoretical curves for each technique. For more information, please refer to van Ede & Angst (2022).
 
-*van Ede, Meeke, and Ueli Angst. "Analysis of polarization curves under mixed activation-diffusion control–an algorithm to minimize human factors." CORROSION (2022): 4171.* 'https://doi.org/10.5006/4171 <https://doi.org/10.5006/4171>'_ *
+*van Ede, Meeke, and Ueli Angst. "Analysis of polarization curves under mixed activation-diffusion control–an algorithm to minimize human factors." CORROSION (2022): 4171.* https://doi.org/10.5006/4171
 
 Initialisation and correction of the polarization curve
 =======================================================
@@ -73,4 +73,4 @@ The goal is the to find the settings for :math:'w_{ac}' and W, for which the fit
 Finally, to obtain a sense of uncertainty associated with the fit, the library contains a function to plot additional figures of the sensitivity analysis, which directly show the effect of W and :math:'w_{ac}' on the fitted :math:`\beta_{cath}` and :math:`i_{L}`.
 
 For more detailed information about the sensitivity analysis, please refer to van Ede & Angst (2022):
-*van Ede, Meeke, and Ueli Angst. "Analysis of polarization curves under mixed activation-diffusion control–an algorithm to minimize human factors." CORROSION (2022): 4171.* 'https://doi.org/10.5006/4171 <https://doi.org/10.5006/4171>'_ *
+*van Ede, Meeke, and Ueli Angst. "Analysis of polarization curves under mixed activation-diffusion control–an algorithm to minimize human factors." CORROSION (2022): 4171.* https://doi.org/10.5006/4171 
