@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'PolCurveFit'
+project = 'polcurvefit'
 copyright = '2022, Meeke van Ede'
 author = 'Meeke van Ede'
 
