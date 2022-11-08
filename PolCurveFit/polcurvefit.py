@@ -13,9 +13,9 @@ import warnings
 class polcurvefit:
 	
 	"""
-	PolCurveFit is a python class that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
+	polcurvefit is a python class that can be used to analyze measured polarization curves and obtain parameters such as the corrosion potential, 
 	Tafel slopes, corrosion current density and exchange current densities. The data can be fitted with 3 techniques: Tafel extrapolation (linear fit), 
-	'Activation control fit' & 'mixed activation-diffusion control fit'.
+	'Activation control fit' & 'mixed activation-diffusion control fit'. 
 
 	:param E: The electrical potentials [V vs ref]
 	:type E: N-length sequence
@@ -45,6 +45,11 @@ class polcurvefit:
 		if all(isinstance(e, (int, float)) for e in I) == False:
 			raise ValueError("non-real numbers in current input")
 
+		# Delete any zero values of I
+		zero_indices = np.where(I == 0.0)[0]
+		I = np.delete(I, zero_indices)
+		E = np.delete(E, zero_indices)
+
 		self.E = E
 		self.I = I
 
@@ -63,10 +68,10 @@ class polcurvefit:
 		# Initializing fitting parameters and results
 		self.fit_results = None
 		self.E_corr = None
-		self.I_corr = None
+		self.I_corr = None  	# This is the 10 base logarithmic of I_corr
 		self.b_a = None
 		self.b_c = None
-		self.i_L = None
+		self.i_L = None         # This is the 10 base logarithmic of I_L
 		self.gamma = None
 		self.RMSE = None
 		self.io_an = None
@@ -464,7 +469,7 @@ class polcurvefit:
 		self.df_sens_std = df_std
 
 		# write df_std to output file
-		df.to_csv(output_folder + '/variability.txt', sep = '\t', float_format = '%.4g', index=False)
+		df_std.to_csv(output_folder + '/variability.txt', sep = '\t', float_format = '%.4g', index=False)
 
 		# Plot standard deviation as a function of W and w_ac
 		fig,ax = plt.subplots(figsize=(6, 5))
@@ -627,13 +632,13 @@ class polcurvefit:
 
 		"""
 		Saving of the results obtained from the fitting in a text file. It lists the fitting technique used, the fitted parameters, and 
-		the corresponding fitted curve
+		the corresponding fitted curve. 
 
 		:param filename: path and name of the output file (Default: './fitting_results')
 		:type output_folder: string
 
 		"""
-
+		
 		# Check input data
 		if self.b_a == None:
 			raise ValueError("No fitting results found.")
@@ -653,14 +658,14 @@ class polcurvefit:
 				f.write('Fitted parameters: ' + '\n')
 				
 			f.write('Corrosion potential (E_corr) [V vs Ref] = ' + '%.4f' % self.E_corr + '\n') 
-			f.write('Corrosion current (density) (I_corr)  = ' + '%.4f' % self.I_corr + '\n')
+			f.write('Corrosion current (density) (I_corr)  = ' + '%.4f' % 10**self.I_corr + '\n')
 			if self.b_c == None:
 				f.write('Tafel slope (b) [V]  = ' + '%.4f' % self.b_a + '\n')
 			else:
 				f.write('Anodic Tafel slope (b_a) [V] = ' + '%.4f' % self.b_a + '\n')
 				f.write('Cathodic Tafel slope (b_c) [V] = ' + '%.4f' % -self.b_c + '\n')
 			if self.i_L != None:
-				f.write('Limiting current (density) (i_L) = ' + '%.4f' % self.i_L + '\n')
+				f.write('Limiting current (density) (i_L) = ' + '%.4f' % 10**self.i_L + '\n')
 			f.write('RMSE = ' + '%.4f' % self.RMSE + '\n')
 			if self.b_c == None:
 				if self.io_an != None:
@@ -789,15 +794,16 @@ class polcurvefit:
 		
 		# Initializing ranges parameter search
 		W_ = np.array(W)
-
-		if w_ac == None:
-			w_ac_ = np.arange(dw_ac,round(abs(0.5*w_dc)+dw_ac,2),dw_ac)
-		else:
+		try:
+			if w_ac == None:
+				w_ac_ = np.arange(dw_ac,round(abs(0.5*w_dc)+dw_ac,2),dw_ac)
+		except:
 			w_ac_ = np.array(w_ac)
 		
-		if w_c == None:
-			w_c_ = np.arange(w_dc, round(window[0]-dw_c,2), -dw_c)
-		else:
+		try:
+			if w_c == None:
+				w_c_ = np.arange(w_dc, round(window[0]-dw_c,2), -dw_c)
+		except:
 			w_c_ = np.array(w_c)
 
 		# Check input values and ranges
