@@ -25,7 +25,7 @@ Now we initiate the polarization curve object. Here we get the option to correct
 
 .. code-block:: python
    
-   >>> from polcurvefit import polcurvefit as pdf
+   >>> from polcurvefit import polcurvefit as pcf
    >>> Polcurve = pcf(E,I,sample_surface=10E-04)
 
 We can visualise the corrected polarization curve
