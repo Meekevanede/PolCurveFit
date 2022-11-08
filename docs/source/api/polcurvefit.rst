@@ -2,7 +2,7 @@
 PolCurveFit
 ==============
 
-.. currentmodule:: polcurvefit.polcurvefit
+.. currentmodule:: PolCurveFit.polcurvefit
 
-.. autoclass:: polcurvefit.polcurvefit
+.. autoclass:: PolCurveFit.polcurvefit
     :members:
