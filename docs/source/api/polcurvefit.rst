@@ -4,5 +4,5 @@ PolCurveFit
 
 .. currentmodule:: polcurvefit.polcurvefit
 
-.. autoclass:: polcurvefit.PolCurveFit
+.. autoclass:: polcurvefit.polcurvefit
     :members:

@@ -12,7 +12,7 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name="PolCurveFit",
-    version="1.1.1",
+    version="1.2.1",
     description="library for the analysis of polarization curves",
     long_description=long_description,
     long_description_content_type="text/markdown",

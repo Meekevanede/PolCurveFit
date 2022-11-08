@@ -25,13 +25,14 @@ Now we initiate the polarization curve object. Here we get the option to correct
 
 .. code-block:: python
    
-   >>> from polcurvefit import PolCurveFit
-   >>> Polcurve = PolCurveFit(E,I,sample_surface=10E-04)
+   >>> from polcurvefit import polcurvefit as pcf
+   >>> Polcurve = pcf(E,I,sample_surface=10E-04)
 
 We can visualise the corrected polarization curve
 
 .. code-block:: python
    
+   >>> import matplotlib.pyplot as plt
    >>> plt.plot(Polcurve.E,np.abs(Polcurve.i))
    >>> plt.yscale('log')
    >>> plt.xlabel('E [V vs ref]')
@@ -42,7 +43,7 @@ We can visualise the corrected polarization curve
    :width: 400
    :alt: Alternative text
 
-From the plot we can see that for this fitting technique we can include all currents. Note that it is important that the currents are only controlled by one cathodic and one anodic reaction. To perform the mixed activation-diffusion control fit, we need to specify the  window relative to the corrosion potential. Therefore:
+From the plot we can see that for this fitting technique we can include all currents. Note that it is important that the currents are only controlled by one cathodic and one anodic reaction. To perform the mixed activation-diffusion control fit, we need to specify the window relative to the corrosion potential. Therefore:
 
 .. code-block:: python
    
@@ -55,7 +56,7 @@ From the plot we can see that for this fitting technique we can include all curr
    The determined cathodic Tafel slope:  -0.1800000000000017 [V]
    The determined anodic Tafel slope:  0.08000000000000007 [V]
    The determined corrosion current density:  2.000000000000054 [A/m2]
-   The determined limiting current density:  299.99999999999983 [A/m2]
+   The determined limiting current density:  300.0000000000001 [A/m2]
 
 We can now save the results (the fitted parameters and curve) to a text file:
 
@@ -73,12 +74,23 @@ To obtain more accurate and less subjective results, we can apply a specific wei
 
 .. code-block:: python
    
-   >>> results = Polcurve.mixed_pol_fit(window=[-0.8,0.3], apply_weight_distribution = True, w_ac = 0.07, W = 80))
+   >>> results = Polcurve.mixed_pol_fit(window=[-0.8,0.3], apply_weight_distribution = True, w_ac = 0.07, W = 80)
 
-To obtain correct values for w_ac and W, we can perform a sensitivity analysis. -- Documentation under progress --
+To obtain correct values for w_ac and W, we can perform a sensitivity analysis (see Methodology). Here we have to give as input w_dc, indicating at which potential [vs :math:'E_{corr}'] the purely diffusion controlled domain starts. For our curve this is at approximately -0.22 V vs :math:'E_{corr}'.
 
+.. code-block:: python
+   
+   >>> results = Polcurve.sens_analysis(window=[-0.8,0.3], w_dc = -0.22, W=np.array([50, 60, 70, 80, 90, 95, 0]), w_ac=[0.03,0.06,0.09,0.12])
 
+.. image:: example3_sens.jpeg
+   :width: 400
+   :alt: Alternative text
 
+From the plots generated, one can tell that the variability of the fitting results as a function of the chosen potential range is very small for this theoretical curve, and the choice for W and w_ac are quite arbitrary. Similar/more stable results are reached by not applying the weight distribution. In the case that the fitting is dependent on accurate settings of W and w_ac, to get a sense of the actual uncertainty associated to our fit, additional figures can be plotted:
+
+.. code-block:: python
+   
+   >>> Polcurve.plotting_sens_analysis()
 
 
 

@@ -1,4 +1,8 @@
 import numpy as np
+import warnings
+
+#suppress warnings
+warnings.filterwarnings('ignore')
 
 # with concentration limited current
 def forward( xdata, I_corr, b_a, b_c, i_L,gamma):

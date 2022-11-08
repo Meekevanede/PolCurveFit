@@ -25,13 +25,14 @@ Now we initiate the polarization curve object. Here we get the option to correct
 
 .. code-block:: python
    
-   >>> from polcurvefit import PolCurveFit
-   >>> Polcurve = PolCurveFit(E,I,sample_surface=10E-04)
+   >>> from polcurvefit import polcurvefit as pcf
+   >>> Polcurve = pcf(E,I,sample_surface=10E-04)
 
 We can visualise the corrected polarization curve
 
 .. code-block:: python
    
+   >>> import matplotlib.pyplot as plt
    >>> plt.plot(Polcurve.E,np.abs(Polcurve.i))
    >>> plt.yscale('log')
    >>> plt.xlabel('E [V vs ref]')

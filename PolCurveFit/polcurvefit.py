@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 import matplotlib as mpl
 import matplotlib.colors as colours
-import warnings
 
 class polcurvefit:
 	
@@ -191,7 +190,7 @@ class polcurvefit:
 
 		# check input 
 		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()):
-			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
+			raise ValueError("Specified i_corr_guess does not lie within the range of the current density")
 
 		# obtain E_corr
 		E_corr = self._find_Ecorr()
@@ -291,9 +290,9 @@ class polcurvefit:
 
 		# check input 
 		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()):
-			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
+			raise ValueError("Specified i_corr_guess does not lie within the range of the current density")
 		if (i_L_guess>self.i.max() or i_L_guess<self.i.min()):
-			warnings.warn("Specified i_L_guess does not lie within the range of the current density")
+			raise ValueError("Specified i_L_guess does not lie within the range of the current density")
 
 		# obtain E_corr
 		E_corr = self._find_Ecorr()
@@ -406,15 +405,15 @@ class polcurvefit:
 
 		# check input 
 		if (i_corr_guess>self.i.max() or i_corr_guess<self.i.min()):
-			warnings.warn("Specified i_corr_guess does not lie within the range of the current density")
+			raise ValueError("Specified i_corr_guess does not lie within the range of the current density")
 		if (i_L_guess>self.i.max() or i_L_guess<self.i.min()):
-			warnings.warn("Specified i_L_guess does not lie within the range of the current density")
+			raise ValueError("Specified i_L_guess does not lie within the range of the current density")
 
 		# making directory
 		try:
 			os.makedirs(output_folder + '/variability_wac')
 		except:
-			warnings.warn("Output folder exists - files might be overwritten")
+			print("Output folder exists - files are overwritten")
 
 		# Initializing ranges for parameter search
 		self.w_dc = w_dc
@@ -435,7 +434,7 @@ class polcurvefit:
 				for window_cat in window_cat_:
 					if -w_ac>window_cat:
 						try:
-							if W == 0:
+							if W == 0.0:
 								result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = False)
 							else:
 								result = self.mixed_pol_fit(window=[window_cat,window[1]], i_corr_guess = i_corr_guess, fix_i_L = fix_i_L, i_L_guess = i_L_guess, apply_weight_distribution = True, w_ac = w_ac, W = W)
@@ -476,7 +475,7 @@ class polcurvefit:
 		mean_ = []
 		deviation_ = []
 		for W in W_:
-			if W == 0:
+			if W == 0.0:
 				plt.scatter(W,df_std.loc[df_std['W']== W]['std_dev'].mean(), s = 200, c = '#000000', marker = '*')
 			else:
 				mean_.append(df_std.loc[df_std['W']== W]['std_dev'].mean())
@@ -534,7 +533,7 @@ class polcurvefit:
 			os.makedirs(output_folder+'/effect_wac')
 
 		except:
-			warnings.warn('Output folder(s) exist(s) - plots will be overwritten')
+			print('Output folder(s) exist(s) - plots will be overwritten')
 
 		# Initializing ranges for parameter search
 		W_, w_ac_, window_cat_ = self._param_ranges(W, w_ac, w_c, self.window_sens, self.w_dc, dw_c, dw_ac)
@@ -754,8 +753,9 @@ class polcurvefit:
 			else:
 				plt.plot(x,y, label = 'W = '+ str(W) +' %')
 
-			if param == 'i_L_best':
+			if param == 'i_L':
 				plt.yscale('log')
+
 		plt.ylabel(ylabel)
 		plt.xlabel(r'cathodic window $w_{c}$ [V from $E_{corr}$]')
 		plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
@@ -794,17 +794,20 @@ class polcurvefit:
 		
 		# Initializing ranges parameter search
 		W_ = np.array(W)
+
+		w_ac_ = np.array(w_ac)
 		try:
 			if w_ac == None:
 				w_ac_ = np.arange(dw_ac,round(abs(0.5*w_dc)+dw_ac,2),dw_ac)
 		except:
-			w_ac_ = np.array(w_ac)
+			pass
 		
+		w_c_ = np.array(w_c)
 		try:
 			if w_c == None:
 				w_c_ = np.arange(w_dc, round(window[0]-dw_c,2), -dw_c)
 		except:
-			w_c_ = np.array(w_c)
+			pass
 
 		# Check input values and ranges
 		if np.any(( W_< 0)|(W_ > 100)):
