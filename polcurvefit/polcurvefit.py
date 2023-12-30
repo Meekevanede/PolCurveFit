@@ -1,3 +1,4 @@
+# © 2019-2022, ETH Zurich, Institute for Building materials, Meeke van Ede, Ueli Angst
 import os
 import numpy as np
 import pandas as pd

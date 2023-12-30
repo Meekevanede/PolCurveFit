@@ -1,3 +1,4 @@
+# © 2019-2022, ETH Zurich, Institute for Building materials, Meeke van Ede, Ueli Angst
 import numpy as np
 
 # Functions to load potential curve data
